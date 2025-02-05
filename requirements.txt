@@ -1,0 +1,5 @@
+numpy
+pygame
+requests
+screeninfo
+perlin-noise
