@@ -10,14 +10,14 @@ from io import BytesIO
 
 pygame.init()
 
-version = "1.1.2"
+version = "1.1.3"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)
 ANT_COLOR = "#000000"
 NEST_COLOR = "#9c8065"
-FOOD_COLOR = "#228B22"
+FOOD_COLOR = "#D2042D"
 FPS = 60
 MONITOR_WIDTH = screeninfo.get_monitors()[0].width
 MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
@@ -288,7 +288,7 @@ while running:
                 x, y = event.pos
                 grid_x = (x + camera_x) // 10
                 grid_y = (y + camera_y) // 10
-                if not perlin_settings.map_data[grid_x][grid_y]:
+                if not perlin_settings.map_data[grid_x][grid_y] and grid_y > 0:
                     food_locations.add((grid_x, grid_y))
                     total_food += 1
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -299,7 +299,7 @@ while running:
                 x, y = event.pos
                 grid_x = (x + camera_x) // 10
                 grid_y = (y + camera_y) // 10
-                if not perlin_settings.map_data[grid_x][grid_y]:
+                if not perlin_settings.map_data[grid_x][grid_y] and grid_y > 0:
                     food_locations.add((grid_x, grid_y))
                     total_food += 1
         elif event.type == pygame.MOUSEWHEEL:
