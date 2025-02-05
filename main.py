@@ -10,7 +10,7 @@ from io import BytesIO
 
 pygame.init()
 
-version = "1.1.1"
+version = "1.1.2"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
@@ -307,8 +307,8 @@ while running:
 
             if new_camera_y > 0:
                 camera_y = 0
-            elif new_camera_y < -1100:
-                camera_y = -1100
+            elif new_camera_y < -960:
+                camera_y = -960
             else:
                 camera_y = new_camera_y
 
@@ -377,7 +377,8 @@ while running:
         border_surface.blit(text_surface, (0, 0))
         return border_surface
     
-    screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -1000 - camera_y))
+    screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -900 - camera_y))
+    pygame.draw.rect(screen, "#4F7942", (0 - camera_x, -50 - camera_y, MONITOR_WIDTH, 50))
 
     if ui_visible:
         threshold_slider.draw(screen)
