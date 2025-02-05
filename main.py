@@ -1,18 +1,17 @@
 import math
 import random
-import sys
-from io import BytesIO
-
 import numpy as np
 import pygame
 import requests
+import platform
 import screeninfo
 from perlin_noise import PerlinNoise
 from requests import Response
+from io import BytesIO
 
 pygame.init()
 
-version = "1.0.1"
+version = "1.1.0"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
@@ -25,6 +24,8 @@ MONITOR_WIDTH = screeninfo.get_monitors()[0].width
 MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.NOFRAME)
+if platform.system() == "Darwin":
+    screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.FULLSCREEN)
 
 def load_icon(URL):
     try:
@@ -58,7 +59,7 @@ class PerlinNoiseSettings:
     def generate_map(self):
         """Generate a 2D map using Perlin noise"""
         return np.array([[1 if self.noise_generator([x / self.scale, y / self.scale]) > self.threshold else 0
-                          for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
+            for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
 
 perlin_settings = PerlinNoiseSettings()
 
@@ -112,7 +113,7 @@ class Button:
 
 
 class Ant:
-    def __init__(self, x, y, nest_location, pheromone_map):
+    def __init__(self, x, y, nest_location, pheromone_map, speed):
         self.x = x
         self.y = y
         self.nest_location = nest_location
@@ -120,7 +121,7 @@ class Ant:
         self.pheromone_map = pheromone_map
         self.color = pygame.Color(ANT_COLOR)
         self.angle = random.uniform(0, 2 * math.pi)
-        self.speed = 0.5
+        self.speed = speed
         self.vision_range = 10
         self.vision_angle = math.pi / 3
 
@@ -251,10 +252,11 @@ class Ant:
 camera_x, camera_y = 0, 0
 camera_speed = 10
 
-threshold_slider = Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
-seed_slider = Slider(10, 50, 300, 0, 1000, perlin_settings.seed)
-ant_slider = Slider(10, 90, 300, 1, 100, 10)  # Slider for number of ants
-start_button = Button(10, 130, 300, 50, "Start")
+threshold_slider = Slider(10, 10, 300, 0.0, 1.03, perlin_settings.threshold)
+seed_slider = Slider(10, 50, 300, 0, 1035, perlin_settings.seed)
+ant_slider = Slider(10, 90, 300, 1, 104, 10)
+speed_slider = Slider(10, 130, 300, 0.0, 5.17, 0.5)
+start_button = Button(10, 170, 300, 50, "Start")
 
 nest_location = (MAP_WIDTH // 2, MAP_HEIGHT // 2)
 food_locations = set()
@@ -270,15 +272,6 @@ collected_food = 0
 button_type = True
 
 url = "https://static.vecteezy.com/system/resources/thumbnails/028/651/906/small_2x/pixel-art-sun-icon-png.png"
-response = requests.get(url)
-if response.status_code == 200:
-    image_data = BytesIO(response.content)
-    sun_image = pygame.image.load(image_data)
-    sun_image = pygame.transform.scale(sun_image, (300, 300))
-else:
-    print("Failed to retrieve the image.")
-    pygame.quit()
-    sys.exit()
 
 def draw_vision_cone(surface, ant):
     start_angle = ant.angle - ant.vision_angle / 2
@@ -344,10 +337,11 @@ while running:
                     perlin_settings.map_data = perlin_settings.generate_map()
 
             ant_slider.handle_event(event)
+            speed_slider.handle_event(event)
 
             if start_button.handle_event(event) and button_type:
                 ui_visible = False
-                ants = [Ant(nest_location[0], nest_location[1], nest_location, pheromone_map)
+                ants = [Ant(nest_location[0], nest_location[1], nest_location, pheromone_map, speed_slider.value)
                         for _ in range(int(ant_slider.value))]
                 total_food = len(food_locations)
                 collected_food = 0
@@ -398,23 +392,24 @@ while running:
         border_surface.blit(text_surface, (0, 0))
         return border_surface
 
-    screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -1000 - camera_y))
-
-    start_button.draw(screen)
-
     if ui_visible:
         threshold_slider.draw(screen)
         seed_slider.draw(screen)
         ant_slider.draw(screen)
+        start_button.draw(screen)
+        speed_slider.draw(screen)
 
         text_threshold = render_text_with_border(f"Threshold: {perlin_settings.threshold:.2f}", (255, 255, 255))
         text_seed = render_text_with_border(f"Seed: {perlin_settings.seed}", (255, 255, 255))
         text_ants = render_text_with_border(f"Ants: {int(ant_slider.value)}", (255, 255, 255))
+        text_speed = render_text_with_border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
 
         screen.blit(text_threshold, (320, 10))
         screen.blit(text_seed, (320, 50))
         screen.blit(text_ants, (320, 90))
+        screen.blit(text_speed, (320, 130))
     else:
+        text_speed = render_text_with_border(f"Speed: {int(speed_slider.value)}", (255, 255, 255))
         text_food = render_text_with_border(f"Food Collected: {collected_food}/{total_food}", (255, 255, 255))
         screen.blit(text_food, (10, 10))
 
