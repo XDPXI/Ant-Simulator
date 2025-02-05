@@ -2,7 +2,6 @@ import math
 import random
 import numpy as np
 import pygame
-import requests
 import platform
 import screeninfo
 from perlin_noise import PerlinNoise
@@ -11,7 +10,7 @@ from io import BytesIO
 
 pygame.init()
 
-version = "1.1.0"
+version = "1.1.1"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
@@ -27,23 +26,8 @@ screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.NOFRAME
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.FULLSCREEN)
 
-def load_icon(URL):
-    try:
-        response: Response = requests.get(URL, timeout=5)
-        response.raise_for_status()
-        image_data = BytesIO(response.content)
-        icon = pygame.image.load(image_data)
-        pygame.display.set_icon(icon)
-        print("Icon loaded successfully")
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to download icon: {e}")
-    except pygame.error as e:
-        print(f"Failed to load icon into Pygame: {e}")
-    except Exception as e:
-        print(f"Unexpected error while loading icon: {e}")
-
-icon_url = "https://static-00.iconduck.com/assets.00/ant-icon-256x246-d0413285.png"
-load_icon(icon_url)
+icon = pygame.image.load("icon.png")
+pygame.display.set_icon(icon)
 
 MAP_WIDTH = screen.get_width() // 10
 MAP_HEIGHT = screen.get_height() // 10
@@ -271,7 +255,8 @@ total_food = 0
 collected_food = 0
 button_type = True
 
-url = "https://static.vecteezy.com/system/resources/thumbnails/028/651/906/small_2x/pixel-art-sun-icon-png.png"
+sun_image = pygame.image.load("sun.png")
+sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 def draw_vision_cone(surface, ant):
     start_angle = ant.angle - ant.vision_angle / 2
@@ -391,6 +376,8 @@ while running:
             border_surface.blit(font.render(text, True, border_color), (dx * border_size, dy * border_size))
         border_surface.blit(text_surface, (0, 0))
         return border_surface
+    
+    screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -1000 - camera_y))
 
     if ui_visible:
         threshold_slider.draw(screen)
