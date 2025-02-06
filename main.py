@@ -1,3 +1,4 @@
+import os
 import math
 import random
 import numpy as np
@@ -8,8 +9,7 @@ from perlin_noise import PerlinNoise
 
 pygame.init()
 
-version = "1.1.5"
-print(f"Ant Simulator v{version}")
+version = "1.1.6"
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)
@@ -23,8 +23,11 @@ pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.NOFRAME)
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.FULLSCREEN)
+if platform.system() == "Windows":
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    os.environ["NVD_BACKEND"] = "dx11"
 
-icon = pygame.image.load("icon.png")
+icon = pygame.image.load("icon.png").convert_alpha()
 pygame.display.set_icon(icon)
 
 MAP_WIDTH = screen.get_width() // 10
@@ -39,7 +42,6 @@ class PerlinNoiseSettings:
         self.map_data = self.generate_map()
 
     def generate_map(self):
-        """Generate a 2D map using Perlin noise"""
         return np.array([[1 if self.noise_generator([x / self.scale, y / self.scale]) > self.threshold else 0
             for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
 
@@ -253,7 +255,7 @@ total_food = 0
 collected_food = 0
 button_type = True
 
-sun_image = pygame.image.load("sun.png")
+sun_image = pygame.image.load("sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 def draw_vision_cone(surface, ant):
