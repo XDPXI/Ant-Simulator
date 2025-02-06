@@ -5,11 +5,15 @@ import numpy as np
 import pygame
 import platform
 import screeninfo
+import logging
 from perlin_noise import PerlinNoise
 
-pygame.init()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-version = "1.1.6"
+pygame.init()
+logging.info("Pygame initialized.")
+
+version = "1.1.7"
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)
@@ -17,10 +21,12 @@ ANT_COLOR = "#000000"
 NEST_COLOR = "#9c8065"
 FOOD_COLOR = "#D2042D"
 FPS = 60
+
 MONITOR_WIDTH = screeninfo.get_monitors()[0].width
 MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.NOFRAME)
+
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.FULLSCREEN)
 if platform.system() == "Windows":
@@ -29,6 +35,7 @@ if platform.system() == "Windows":
 
 icon = pygame.image.load("icon.png").convert_alpha()
 pygame.display.set_icon(icon)
+logging.info("Window and icon initialized.")
 
 MAP_WIDTH = screen.get_width() // 10
 MAP_HEIGHT = screen.get_height() // 10
@@ -40,14 +47,17 @@ class PerlinNoiseSettings:
         self.seed = seed
         self.noise_generator = PerlinNoise(octaves=1, seed=self.seed)
         self.map_data = self.generate_map()
+        logging.info(f"Perlin noise settings initialized with seed: {self.seed}, threshold: {self.threshold}")
 
     def generate_map(self):
+        logging.info("Generating Perlin noise map.")
         return np.array([[1 if self.noise_generator([x / self.scale, y / self.scale]) > self.threshold else 0
             for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
 
 perlin_settings = PerlinNoiseSettings()
 
 font = pygame.font.Font(None, 36)
+logging.info("Fonts loaded.")
 
 class Slider:
     def __init__(self, x, y, width, min_value, max_value, initial_value):
@@ -58,6 +68,7 @@ class Slider:
         self.value = initial_value
         self.slider_rect = pygame.Rect(x + (initial_value - min_value) / (max_value - min_value) * width, y, 10, 20)
         self.dragging = False
+        logging.info(f"Slider initialized at ({x}, {y}) with value {self.value}")
 
     def draw(self, surface):
         pygame.draw.rect(surface, (0, 0, 0), self.rect.inflate(4, 4))
@@ -67,15 +78,17 @@ class Slider:
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.slider_rect.collidepoint(event.pos):
             self.dragging = True
+            logging.info("Slider drag started.")
         elif event.type == pygame.MOUSEBUTTONUP and self.dragging:
             self.dragging = False
+            logging.info(f"Slider value set to {self.value}")
             return True
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             new_x = max(self.rect.x, min(event.pos[0], self.rect.x + self.rect.width - self.slider_rect.width))
             self.slider_rect.x = new_x
             self.value = self.min_value + (new_x - self.rect.x) / self.rect.width * (self.max_value - self.min_value)
         return False
-
+    
 class Button:
     def __init__(self, x, y, width, height, text):
         self.x = x
@@ -95,7 +108,6 @@ class Button:
     def handle_event(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
 
-
 class Ant:
     def __init__(self, x, y, nest_location, pheromone_map, speed):
         self.x = x
@@ -108,6 +120,7 @@ class Ant:
         self.speed = speed
         self.vision_range = 10
         self.vision_angle = math.pi / 3
+        logging.info(f"Ant spawned at ({self.x}, {self.y})")
 
     def check_collision(self, x, y):
         grid_x, grid_y = int(x), int(y)
@@ -252,6 +265,7 @@ ui_visible = True
 ants = []
 drawing_food = False
 total_food = 0
+old_total_food = 0
 collected_food = 0
 button_type = True
 
@@ -272,6 +286,7 @@ def draw_vision_cone(surface, ant):
     pygame.draw.polygon(cone_surface, (255, 255, 255, 128), points)
     surface.blit(cone_surface, (0, 0))
 
+logging.info("Game loop started.")
 while running:
     screen.fill("#87CEEB")
     pygame.draw.rect(screen, BG_COLOR, (0 - camera_x, 0 - camera_y, MONITOR_WIDTH, MONITOR_HEIGHT))
@@ -279,9 +294,11 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            logging.info("Quit event received.")
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
+                logging.info("Escape key pressed, exiting.")
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 drawing_food = True
@@ -403,11 +420,14 @@ while running:
         screen.blit(text_ants, (320, 90))
         screen.blit(text_speed, (320, 130))
     else:
-        text_speed = render_text_with_border(f"Speed: {int(speed_slider.value)}", (255, 255, 255))
         text_food = render_text_with_border(f"Food Collected: {collected_food}/{total_food}", (255, 255, 255))
         screen.blit(text_food, (10, 10))
+        if food_locations is None or len(food_locations) == 0 or collected_food == total_food and old_total_food < total_food:
+            total_food = collected_food
+            old_total_food = total_food
 
     pygame.display.flip()
     clock.tick(FPS)
 
 pygame.quit()
+logging.info("Game closed.")
