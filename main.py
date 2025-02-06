@@ -3,6 +3,7 @@ import math
 import os
 import platform
 import random
+import screeninfo
 
 import pygame
 
@@ -23,7 +24,14 @@ screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGH
 
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
+    settings.FULLSCREEN = True
 if platform.system() == "Windows":
+    if settings.MONITOR_WIDTH < 1920 and settings.MONITOR_HEIGHT < 1080:
+        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
+        settings.FULLSCREEN = True
+    else:
+        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.RESIZABLE)
+        settings.FULLSCREEN = False
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
@@ -185,6 +193,9 @@ while settings.running:
     screen.fill("#87CEEB")
     pygame.draw.rect(screen, settings.BG_COLOR,
                      (0 - settings.camera_x, 0 - settings.camera_y, settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT))
+    
+    settings.MONITOR_WIDTH = screeninfo.get_monitors()[0].width
+    settings.MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -194,6 +205,15 @@ while settings.running:
             if event.key == pygame.K_ESCAPE:
                 settings.running = False
                 logging.info("Escape key pressed, exiting.")
+            elif event.key == pygame.K_f:
+                if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
+                    screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
+                else:
+                    if platform.system() == "Darwin":
+                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
+                    if platform.system() == "Windows":
+                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
+                        settings.FULLSCREEN = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 settings.drawing_food = True

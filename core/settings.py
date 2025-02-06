@@ -4,7 +4,7 @@ import numpy as np
 import pygame
 import screeninfo
 
-version = "1.2.0"
+version = "1.2.1"
 FPS = 60
 
 BG_COLOR = (118, 97, 77)
@@ -12,11 +12,11 @@ WALL_COLOR = (77, 62, 49)
 ANT_COLOR = "#000000"
 NEST_COLOR = "#9c8065"
 FOOD_COLOR = "#D2042D"
-0
 MONITOR_WIDTH = screeninfo.get_monitors()[0].width
 MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 MAP_WIDTH = MONITOR_WIDTH // 10
 MAP_HEIGHT = MONITOR_HEIGHT // 10
+FULLSCREEN = False
 
 logging.info("Fonts loaded.")
 
