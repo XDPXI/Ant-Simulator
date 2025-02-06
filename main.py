@@ -4,114 +4,42 @@ import os
 import platform
 import random
 
-import numpy as np
 import pygame
-import screeninfo
-from perlin_noise import PerlinNoise
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from core import perlin, settings, update_checker
+from gui import slider, button
+
+update_checker.check_updates()
 
 pygame.init()
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+
 logging.info("Pygame initialized.")
+font = pygame.font.Font(None, 36)
 
-version = "1.1.8"
-
-BG_COLOR = (118, 97, 77)
-WALL_COLOR = (77, 62, 49)
-ANT_COLOR = "#000000"
-NEST_COLOR = "#9c8065"
-FOOD_COLOR = "#D2042D"
-FPS = 60
-
-MONITOR_WIDTH = screeninfo.get_monitors()[0].width
-MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 pygame.display.set_caption("Ant Simulator")
-screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.NOFRAME)
+screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
 
 if platform.system() == "Darwin":
-    screen = pygame.display.set_mode((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
 if platform.system() == "Windows":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
-icon = pygame.image.load("icon.png").convert_alpha()
+perlin_settings = perlin.PerlinNoiseSettings()
+threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
+seed_slider = slider.Slider(10, 50, 300, 0, 1000, perlin_settings.seed)
+ant_slider = slider.Slider(10, 90, 300, 1, 1000, 10)
+speed_slider = slider.Slider(10, 130, 300, 0.0, 5.0, 0.5)
+start_button = button.Button(10, 170, 300, 50, "Start")
+
+icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
 logging.info("Window and icon initialized.")
 
-MAP_WIDTH = screen.get_width() // 10
-MAP_HEIGHT = screen.get_height() // 10
-
-
-class PerlinNoiseSettings:
-    def __init__(self, scale=40.0, threshold=0.1, seed=0):
-        self.scale = scale
-        self.threshold = threshold
-        self.seed = seed
-        self.noise_generator = PerlinNoise(octaves=1, seed=self.seed)
-        self.map_data = self.generate_map()
-        logging.info(f"Perlin noise settings initialized with seed: {self.seed}, threshold: {self.threshold}")
-
-    def generate_map(self):
-        logging.info("Generating Perlin noise map.")
-        return np.array([[1 if self.noise_generator([x / self.scale, y / self.scale]) > self.threshold else 0
-                          for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
-
-
-perlin_settings = PerlinNoiseSettings()
-
-font = pygame.font.Font(None, 36)
-logging.info("Fonts loaded.")
-
-
-class Slider:
-    def __init__(self, x, y, width, min_value, max_value, initial_value):
-        self.y = y
-        self.rect = pygame.Rect(x, y, width, 20)
-        self.min_value = min_value
-        self.max_value = max_value
-        self.value = initial_value
-        self.slider_rect = pygame.Rect(x + (initial_value - min_value) / (max_value - min_value) * width, y, 10, 20)
-        self.dragging = False
-        logging.info(f"Slider initialized at ({x}, {y}) with value {self.value}")
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, (0, 0, 0), self.rect.inflate(4, 4))
-        pygame.draw.rect(surface, (200, 200, 200), self.rect)
-        pygame.draw.rect(surface, (0, 128, 255), self.slider_rect)
-
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.slider_rect.collidepoint(event.pos):
-            self.dragging = True
-            logging.info("Slider drag started.")
-        elif event.type == pygame.MOUSEBUTTONUP and self.dragging:
-            self.dragging = False
-            logging.info(f"Slider value set to {self.value}")
-            return True
-        elif event.type == pygame.MOUSEMOTION and self.dragging:
-            new_x = max(self.rect.x, min(event.pos[0], self.rect.x + self.rect.width - self.slider_rect.width))
-            self.slider_rect.x = new_x
-            self.value = self.min_value + (new_x - self.rect.x) / self.rect.width * (self.max_value - self.min_value)
-        return False
-
-
-class Button:
-    def __init__(self, x, y, width, height, text):
-        self.x = x
-        self.y = y
-        self.rect = pygame.Rect(x, y, width, height)
-        self.text = text
-        self.color = (0, 128, 255)
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, (0, 0, 0), self.rect.inflate(4, 4))
-        pygame.draw.rect(surface, self.color, self.rect)
-        text_surface = font.render(self.text, True, (255, 255, 255))
-        surface.blit(text_surface, (
-            self.rect.centerx - text_surface.get_width() // 2,
-            self.rect.centery - text_surface.get_height() // 2))
-
-    def handle_event(self, event):
-        return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+sun_image = pygame.image.load("assets/sun.png").convert_alpha()
+sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 
 class Ant:
@@ -121,7 +49,7 @@ class Ant:
         self.nest_location = nest_location
         self.has_food = False
         self.pheromone_map = pheromone_map
-        self.color = pygame.Color(ANT_COLOR)
+        self.color = pygame.Color(settings.ANT_COLOR)
         self.angle = random.uniform(0, 2 * math.pi)
         self.speed = speed
         self.vision_range = 10
@@ -130,8 +58,8 @@ class Ant:
 
     def check_collision(self, x, y):
         grid_x, grid_y = int(x), int(y)
-        return (grid_x < 0 or grid_x >= MAP_WIDTH or
-                grid_y < 0 or grid_y >= MAP_HEIGHT or
+        return (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
+                grid_y < 0 or grid_y >= settings.MAP_HEIGHT or
                 perlin_settings.map_data[grid_x][grid_y] == 1)
 
     def check_food_in_vision(self, food_locations):
@@ -160,7 +88,7 @@ class Ant:
         return False
 
     def move(self):
-        food_in_vision = self.check_food_in_vision(food_locations)
+        food_in_vision = self.check_food_in_vision(settings.food_locations)
         if food_in_vision:
             self.move_towards(food_in_vision)
         else:
@@ -212,7 +140,7 @@ class Ant:
                     continue
                 x = int(self.x + dx)
                 y = int(self.y + dy)
-                if 0 <= x < MAP_WIDTH and 0 <= y < MAP_HEIGHT:
+                if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:
                     pheromone = self.pheromone_map[x][y]
                     if pheromone > strongest_pheromone:
                         strongest_pheromone = pheromone
@@ -224,11 +152,11 @@ class Ant:
             self.angle += angle_diff * 0.1
 
     def get_pheromone_strength(self, x, y):
-        return self.pheromone_map[x % MAP_WIDTH][y % MAP_HEIGHT]
+        return self.pheromone_map[x % settings.MAP_WIDTH][y % settings.MAP_HEIGHT]
 
     def leave_pheromone(self):
         x, y = int(self.x), int(self.y)
-        self.pheromone_map[x % MAP_WIDTH][y % MAP_HEIGHT] = 1
+        self.pheromone_map[x % settings.MAP_WIDTH][y % settings.MAP_HEIGHT] = 1
 
     def find_food(self, food_locations):
         for food in food_locations:
@@ -252,154 +180,109 @@ class Ant:
             self.leave_pheromone()
         return False
 
-
-camera_x, camera_y = 0, 0
-camera_speed = 10
-
-threshold_slider = Slider(10, 10, 300, 0.0, 1.03, perlin_settings.threshold)
-seed_slider = Slider(10, 50, 300, 0, 1035, perlin_settings.seed)
-ant_slider = Slider(10, 90, 300, 1, 1035, 10)
-speed_slider = Slider(10, 130, 300, 0.0, 5.17, 0.5)
-start_button = Button(10, 170, 300, 50, "Start")
-
-nest_location = (MAP_WIDTH // 2, MAP_HEIGHT // 2)
-food_locations = set()
-pheromone_map = np.zeros((MAP_WIDTH, MAP_HEIGHT))
-
-clock = pygame.time.Clock()
-running = True
-ui_visible = True
-ants = []
-drawing_food = False
-total_food = 0
-old_total_food = 0
-collected_food = 0
-button_type = True
-
-sun_image = pygame.image.load("sun.png").convert_alpha()
-sun_image = pygame.transform.scale(sun_image, (300, 300))
-
-
-def draw_vision_cone(surface, ant):
-    start_angle = ant.angle - ant.vision_angle / 2
-    end_angle = ant.angle + ant.vision_angle / 2
-    points = [
-        (ant.x * 10, ant.y * 10),
-        (ant.x * 10 + math.cos(start_angle) * ant.vision_range * 10,
-         ant.y * 10 + math.sin(start_angle) * ant.vision_range * 10),
-        (ant.x * 10 + math.cos(end_angle) * ant.vision_range * 10,
-         ant.y * 10 + math.sin(end_angle) * ant.vision_range * 10),
-    ]
-    cone_surface = pygame.Surface((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.SRCALPHA)
-    pygame.draw.polygon(cone_surface, (255, 255, 255, 128), points)
-    surface.blit(cone_surface, (0, 0))
-
-
 logging.info("Game loop started.")
-while running:
+while settings.running:
     screen.fill("#87CEEB")
-    pygame.draw.rect(screen, BG_COLOR, (0 - camera_x, 0 - camera_y, MONITOR_WIDTH, MONITOR_HEIGHT))
+    pygame.draw.rect(screen, settings.BG_COLOR,
+                     (0 - settings.camera_x, 0 - settings.camera_y, settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            settings.running = False
             logging.info("Quit event received.")
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                running = False
+                settings.running = False
                 logging.info("Escape key pressed, exiting.")
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                drawing_food = True
-                x, y = event.pos
-                grid_x = (x + camera_x) // 10
-                grid_y = (y + camera_y) // 10
-                try:
-                    if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
-                        food_locations.add((grid_x, grid_y))
-                        total_food += 1
-                except:
-                    print("Invalid grid position")
+                settings.drawing_food = True
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
-                drawing_food = False
+                settings.drawing_food = False
         elif event.type == pygame.MOUSEMOTION:
-            if drawing_food:
+            if settings.drawing_food:
                 x, y = event.pos
-                grid_x = (x + camera_x) // 10
-                grid_y = (y + camera_y) // 10
-                try:
-                    if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
-                        food_locations.add((grid_x, grid_y))
-                        total_food += 1
-                except:
-                    print("Invalid grid position")
+                grid_x = (x + settings.camera_x) // 10
+                grid_y = (y + settings.camera_y) // 10
+                if not threshold_slider.is_hovered or not seed_slider.is_hovered or not speed_slider.is_hovered or not ant_slider.is_hovered or not start_button.is_hovered:
+                    try:
+                        if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
+                            settings.food_locations.add((grid_x, grid_y))
+                            settings.total_food += 1
+                    except:
+                        print("Invalid grid position")
+                else:
+                    settings.drawing_food = False
         elif event.type == pygame.MOUSEWHEEL:
-            new_camera_y = camera_y - (event.y * 20)
+            new_camera_y = settings.camera_y - (event.y * 20)
 
             if new_camera_y > 0:
-                camera_y = 0
+                settings.camera_y = 0
             elif new_camera_y < -960:
-                camera_y = -960
+                settings.camera_y = -960
             else:
-                camera_y = new_camera_y
+                settings.camera_y = new_camera_y
 
-        if ui_visible:
+        if settings.ui_visible:
             if threshold_slider.handle_event(event) or seed_slider.handle_event(event):
                 if perlin_settings.threshold != threshold_slider.value or perlin_settings.seed != int(
                         seed_slider.value):
                     perlin_settings.threshold = threshold_slider.value
                     perlin_settings.seed = int(seed_slider.value)
-                    perlin_settings.noise_generator = PerlinNoise(octaves=1, seed=perlin_settings.seed)
+                    perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin_settings.seed)
                     perlin_settings.map_data = perlin_settings.generate_map()
 
             ant_slider.handle_event(event)
             speed_slider.handle_event(event)
 
-            if start_button.handle_event(event) and button_type:
-                ui_visible = False
-                ants = [Ant(nest_location[0], nest_location[1], nest_location, pheromone_map, speed_slider.value)
+            if start_button.handle_event(event) and settings.button_type:
+                settings.ui_visible = False
+                settings.ants = [Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                     settings.pheromone_map, speed_slider.value)
                         for _ in range(int(ant_slider.value))]
-                total_food = len(food_locations)
-                collected_food = 0
+                settings.total_food = len(settings.food_locations)
+                settings.collected_food = 0
 
-    if not ui_visible:
-        for ant in ants:
-            if ant.has_food:
-                if ant.return_to_nest():
-                    collected_food += 1
+    if not settings.ui_visible:
+        for Ant in settings.ants:
+            if Ant.has_food:
+                if Ant.return_to_nest():
+                    settings.collected_food += 1
             else:
-                ant.move()
-                if ant.find_food(food_locations):
-                    ant.leave_pheromone()
-        pheromone_map *= 0.99
+                Ant.move()
+                if Ant.find_food(settings.food_locations):
+                    Ant.leave_pheromone()
+        settings.pheromone_map *= 0.99
 
-    for x in range(MAP_WIDTH):
-        for y in range(MAP_HEIGHT):
+    for x in range(settings.MAP_WIDTH):
+        for y in range(settings.MAP_HEIGHT):
             if perlin_settings.map_data[x, y] == 1:
-                pygame.draw.rect(screen, WALL_COLOR, ((x * 10) - camera_x, (y * 10) - camera_y, 10, 10))
+                pygame.draw.rect(screen, settings.WALL_COLOR,
+                                 ((x * 10) - settings.camera_x, (y * 10) - settings.camera_y, 10, 10))
 
-    pygame.draw.rect(screen, pygame.Color(NEST_COLOR),
-                     ((nest_location[0] * 10) - camera_x, (nest_location[1] * 10) - camera_y, 10, 10))
+    pygame.draw.rect(screen, pygame.Color(settings.NEST_COLOR),
+                     ((settings.nest_location[0] * 10) - settings.camera_x,
+                      (settings.nest_location[1] * 10) - settings.camera_y, 10, 10))
 
-    for food in food_locations:
-        pygame.draw.rect(screen, pygame.Color(FOOD_COLOR),
-                         ((food[0] * 10) - camera_x, (food[1] * 10) - camera_y, 10, 10))
+    for food in settings.food_locations:
+        pygame.draw.rect(screen, pygame.Color(settings.FOOD_COLOR),
+                         ((food[0] * 10) - settings.camera_x, (food[1] * 10) - settings.camera_y, 10, 10))
 
-    for ant in ants:
-        ant_color = pygame.Color(FOOD_COLOR) if ant.has_food else pygame.Color(ANT_COLOR)
+    for ant in settings.ants:
+        ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(ant.x * 10) - camera_x, int(ant.y * 10) - camera_y), 3)
+                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
 
-    pheromone_surface = pygame.Surface((MAP_WIDTH * 10, MAP_HEIGHT * 10), pygame.SRCALPHA)
-    for x in range(MAP_WIDTH):
-        for y in range(MAP_HEIGHT):
-            intensity = int(pheromone_map[x, y] * 255)
+    pheromone_surface = pygame.Surface((settings.MAP_WIDTH * 10, settings.MAP_HEIGHT * 10), pygame.SRCALPHA)
+    for x in range(settings.MAP_WIDTH):
+        for y in range(settings.MAP_HEIGHT):
+            intensity = int(settings.pheromone_map[x, y] * 255)
             if intensity > 0:
                 pygame.draw.rect(pheromone_surface, (255, 255, 0, intensity),
                                  ((x * 10), (y * 10), 10, 10))
 
-    screen.blit(pheromone_surface, (-camera_x, -camera_y))
+    screen.blit(pheromone_surface, (-settings.camera_x, -settings.camera_y))
 
 
     def render_text_with_border(text, color, border_color=(0, 0, 0), border_size=2):
@@ -411,10 +294,10 @@ while running:
         return border_surface
 
 
-    screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -900 - camera_y))
-    pygame.draw.rect(screen, "#4F7942", (0 - camera_x, -50 - camera_y, MONITOR_WIDTH, 50))
+    screen.blit(sun_image, ((settings.MONITOR_WIDTH - 400) - +settings.camera_x, -900 - settings.camera_y))
+    pygame.draw.rect(screen, "#4F7942", (0 - settings.camera_x, -50 - settings.camera_y, settings.MONITOR_WIDTH, 50))
 
-    if ui_visible:
+    if settings.ui_visible:
         threshold_slider.draw(screen)
         seed_slider.draw(screen)
         ant_slider.draw(screen)
@@ -431,15 +314,16 @@ while running:
         screen.blit(text_ants, (320, 90))
         screen.blit(text_speed, (320, 130))
     else:
-        text_food = render_text_with_border(f"Food Collected: {collected_food}/{total_food}", (255, 255, 255))
+        text_food = render_text_with_border(f"Food Collected: {settings.collected_food}/{settings.total_food}",
+                                            (255, 255, 255))
         screen.blit(text_food, (10, 10))
-        if food_locations is None or len(
-                food_locations) == 0 or collected_food == total_food and old_total_food < total_food:
-            total_food = collected_food
-            old_total_food = total_food
+        if settings.food_locations is None or len(
+                settings.food_locations) == 0 or settings.collected_food == settings.total_food and settings.old_total_food < settings.total_food:
+            settings.total_food = settings.collected_food
+            old_total_food = settings.total_food
 
     pygame.display.flip()
-    clock.tick(FPS)
+    settings.clock.tick(settings.FPS)
 
 pygame.quit()
 logging.info("Game closed.")

@@ -1,4 +1,6 @@
 import os
 
+libraries = "numpy pygame screeninfo perlin-noise"
+
 print("Installing required libraries...")
-os.system("pip install numpy pygame screeninfo perlin-noise")
+os.system(f"python -m pip install --upgrade pip {libraries}")
