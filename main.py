@@ -1,11 +1,12 @@
-import os
+import logging
 import math
+import os
+import platform
 import random
+
 import numpy as np
 import pygame
-import platform
 import screeninfo
-import logging
 from perlin_noise import PerlinNoise
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 pygame.init()
 logging.info("Pygame initialized.")
 
-version = "1.1.7"
+version = "1.1.8"
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)
@@ -40,6 +41,7 @@ logging.info("Window and icon initialized.")
 MAP_WIDTH = screen.get_width() // 10
 MAP_HEIGHT = screen.get_height() // 10
 
+
 class PerlinNoiseSettings:
     def __init__(self, scale=40.0, threshold=0.1, seed=0):
         self.scale = scale
@@ -52,12 +54,14 @@ class PerlinNoiseSettings:
     def generate_map(self):
         logging.info("Generating Perlin noise map.")
         return np.array([[1 if self.noise_generator([x / self.scale, y / self.scale]) > self.threshold else 0
-            for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
+                          for y in range(MAP_HEIGHT)] for x in range(MAP_WIDTH)])
+
 
 perlin_settings = PerlinNoiseSettings()
 
 font = pygame.font.Font(None, 36)
 logging.info("Fonts loaded.")
+
 
 class Slider:
     def __init__(self, x, y, width, min_value, max_value, initial_value):
@@ -88,7 +92,8 @@ class Slider:
             self.slider_rect.x = new_x
             self.value = self.min_value + (new_x - self.rect.x) / self.rect.width * (self.max_value - self.min_value)
         return False
-    
+
+
 class Button:
     def __init__(self, x, y, width, height, text):
         self.x = x
@@ -107,6 +112,7 @@ class Button:
 
     def handle_event(self, event):
         return event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos)
+
 
 class Ant:
     def __init__(self, x, y, nest_location, pheromone_map, speed):
@@ -246,6 +252,7 @@ class Ant:
             self.leave_pheromone()
         return False
 
+
 camera_x, camera_y = 0, 0
 camera_speed = 10
 
@@ -272,6 +279,7 @@ button_type = True
 sun_image = pygame.image.load("sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
 
+
 def draw_vision_cone(surface, ant):
     start_angle = ant.angle - ant.vision_angle / 2
     end_angle = ant.angle + ant.vision_angle / 2
@@ -285,6 +293,7 @@ def draw_vision_cone(surface, ant):
     cone_surface = pygame.Surface((MONITOR_WIDTH, MONITOR_HEIGHT), pygame.SRCALPHA)
     pygame.draw.polygon(cone_surface, (255, 255, 255, 128), points)
     surface.blit(cone_surface, (0, 0))
+
 
 logging.info("Game loop started.")
 while running:
@@ -392,6 +401,7 @@ while running:
 
     screen.blit(pheromone_surface, (-camera_x, -camera_y))
 
+
     def render_text_with_border(text, color, border_color=(0, 0, 0), border_size=2):
         text_surface = font.render(text, True, color)
         border_surface = pygame.Surface(text_surface.get_size(), pygame.SRCALPHA)
@@ -399,7 +409,8 @@ while running:
             border_surface.blit(font.render(text, True, border_color), (dx * border_size, dy * border_size))
         border_surface.blit(text_surface, (0, 0))
         return border_surface
-    
+
+
     screen.blit(sun_image, ((MONITOR_WIDTH - 400) - camera_x, -900 - camera_y))
     pygame.draw.rect(screen, "#4F7942", (0 - camera_x, -50 - camera_y, MONITOR_WIDTH, 50))
 
@@ -422,7 +433,8 @@ while running:
     else:
         text_food = render_text_with_border(f"Food Collected: {collected_food}/{total_food}", (255, 255, 255))
         screen.blit(text_food, (10, 10))
-        if food_locations is None or len(food_locations) == 0 or collected_food == total_food and old_total_food < total_food:
+        if food_locations is None or len(
+                food_locations) == 0 or collected_food == total_food and old_total_food < total_food:
             total_food = collected_food
             old_total_food = total_food
 
