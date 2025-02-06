@@ -3,9 +3,9 @@ import math
 import os
 import platform
 import random
-import screeninfo
 
 import pygame
+import screeninfo
 
 from core import perlin, settings, update_checker
 from gui import slider, button
@@ -208,6 +208,9 @@ while settings.running:
             elif event.key == pygame.K_f:
                 if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
                     screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
+                    center_x = (settings.MONITOR_WIDTH - 1920) // 2
+                    center_y = (settings.MONITOR_HEIGHT - 1080) // 2
+                    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{center_x},{center_y}"
                 else:
                     if platform.system() == "Darwin":
                         screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)

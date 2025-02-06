@@ -4,7 +4,7 @@ import numpy as np
 import pygame
 import screeninfo
 
-version = "1.2.1"
+version = "1.2.2"
 FPS = 60
 
 BG_COLOR = (118, 97, 77)
