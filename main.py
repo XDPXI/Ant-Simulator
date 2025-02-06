@@ -10,7 +10,7 @@ from io import BytesIO
 
 pygame.init()
 
-version = "1.1.3"
+version = "1.1.4"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
@@ -238,7 +238,7 @@ camera_speed = 10
 
 threshold_slider = Slider(10, 10, 300, 0.0, 1.03, perlin_settings.threshold)
 seed_slider = Slider(10, 50, 300, 0, 1035, perlin_settings.seed)
-ant_slider = Slider(10, 90, 300, 1, 104, 10)
+ant_slider = Slider(10, 90, 300, 1, 1035, 10)
 speed_slider = Slider(10, 130, 300, 0.0, 5.17, 0.5)
 start_button = Button(10, 170, 300, 50, "Start")
 
