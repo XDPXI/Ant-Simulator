@@ -10,7 +10,7 @@ from io import BytesIO
 
 pygame.init()
 
-version = "1.1.4"
+version = "1.1.5"
 print(f"Ant Simulator v{version}")
 
 BG_COLOR = (118, 97, 77)
@@ -288,9 +288,12 @@ while running:
                 x, y = event.pos
                 grid_x = (x + camera_x) // 10
                 grid_y = (y + camera_y) // 10
-                if not perlin_settings.map_data[grid_x][grid_y] and grid_y > 0:
-                    food_locations.add((grid_x, grid_y))
-                    total_food += 1
+                try:
+                    if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
+                        food_locations.add((grid_x, grid_y))
+                        total_food += 1
+                except:
+                    print("Invalid grid position")
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 drawing_food = False
@@ -299,9 +302,12 @@ while running:
                 x, y = event.pos
                 grid_x = (x + camera_x) // 10
                 grid_y = (y + camera_y) // 10
-                if not perlin_settings.map_data[grid_x][grid_y] and grid_y > 0:
-                    food_locations.add((grid_x, grid_y))
-                    total_food += 1
+                try:
+                    if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
+                        food_locations.add((grid_x, grid_y))
+                        total_food += 1
+                except:
+                    print("Invalid grid position")
         elif event.type == pygame.MOUSEWHEEL:
             new_camera_y = camera_y - (event.y * 20)
 
