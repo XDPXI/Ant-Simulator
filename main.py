@@ -5,8 +5,6 @@ import pygame
 import platform
 import screeninfo
 from perlin_noise import PerlinNoise
-from requests import Response
-from io import BytesIO
 
 pygame.init()
 
