@@ -1,5 +1,8 @@
-import math
 import os
+
+os.system("pip install -r requirements.txt")
+
+import math
 import platform
 import random
 import sys
@@ -10,8 +13,6 @@ from colorama import init
 
 from core import perlin, settings, update_checker, logging
 from gui import slider, button, progress_bar
-
-os.system("pip install -r requirements.txt")
 
 init(autoreset=True)
 
@@ -42,7 +43,8 @@ perlin_settings = perlin.PerlinNoiseSettings()
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
 seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
 ant_slider = slider.Slider(10, 100, 300, 1, 1000, 10)
-food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0, label="Food")
+food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
+                                            label="Food")
 speed_slider = slider.Slider(10, 140, 300, 0.0, 10.0, 0.5)
 start_button = button.Button(10, 180, 300, 50, "Start", 40)
 
@@ -198,19 +200,21 @@ class Ant:
             self.move_towards(self.nest_location)
             self.leave_pheromone()
         return False
-    
+
+
 def regenerate_perlin_map():
     if perlin_settings.threshold != threshold_slider.value or perlin_settings.seed != int(
-                        seed_button_value):
-                    perlin_settings.threshold = threshold_slider.value
-                    perlin_settings.seed = int(seed_button_value)
-                    perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin_settings.seed)
-                    perlin_settings.map_data = perlin_settings.generate_map()
-                    if not settings.ui_visible:
-                        for ant in settings.ants:
-                            ant.x = settings.nest_location[0]
-                            ant.y= settings.nest_location[1]
-                        # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
+            seed_button_value):
+        perlin_settings.threshold = threshold_slider.value
+        perlin_settings.seed = int(seed_button_value)
+        perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin_settings.seed)
+        perlin_settings.map_data = perlin_settings.generate_map()
+        if not settings.ui_visible:
+            for ant in settings.ants:
+                ant.x = settings.nest_location[0]
+                ant.y = settings.nest_location[1]
+            # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
+
 
 logging.info("Game loop started.")
 while settings.running:
@@ -239,9 +243,11 @@ while settings.running:
                     os.environ['SDL_VIDEO_WINDOW_POS'] = f"{center_x},{center_y}"
                 else:
                     if platform.system() == "Darwin":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
+                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
+                                                         pygame.FULLSCREEN)
                     if platform.system() == "Windows":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
+                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
+                                                         pygame.NOFRAME)
                         settings.FULLSCREEN = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -287,8 +293,8 @@ while settings.running:
         if start_button.handle_event(event) and settings.button_type:
             settings.ui_visible = False
             settings.ants = [Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                    settings.pheromone_map, speed_slider.value)
-                    for _ in range(int(ant_slider.value))]
+                                 settings.pheromone_map, speed_slider.value)
+                             for _ in range(int(ant_slider.value))]
             settings.total_food = len(settings.food_locations)
             settings.collected_food = 0
 
@@ -343,7 +349,6 @@ while settings.running:
 
     screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (153 // 2)) - +settings.camera_x, -63 - settings.camera_y))
 
-
     threshold_slider.draw(screen)
     seed_button.draw(screen)
 
@@ -357,7 +362,7 @@ while settings.running:
         ant_slider.draw(screen)
         speed_slider.draw(screen)
         start_button.draw(screen)
-        
+
         text_ants = render_text_with_border(f"Ants: {int(ant_slider.value)}", (255, 255, 255))
         text_speed = render_text_with_border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
 
@@ -370,7 +375,7 @@ while settings.running:
 
         text_food = render_text_with_border(f"Food Collected: {settings.collected_food}/{settings.total_food}",
                                             (255, 255, 255))
-        
+
         screen.blit(text_food, (320, 99))
 
         if settings.food_locations is None or len(
