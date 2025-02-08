@@ -39,7 +39,7 @@ if platform.system() == "Windows":
 perlin_settings = perlin.PerlinNoiseSettings()
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
 seed_slider = slider.Slider(10, 50, 300, 0, 1000, perlin_settings.seed)
-ant_slider = slider.Slider(10, 90, 300, 1, 100, 10)
+ant_slider = slider.Slider(10, 90, 300, 1, 1000, 10)
 speed_slider = slider.Slider(10, 130, 300, 0.0, 10.0, 0.5)
 start_button = button.Button(10, 170, 300, 50, "Start")
 
