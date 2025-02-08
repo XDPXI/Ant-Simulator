@@ -7,6 +7,7 @@ import logging
 with open("version.txt") as f:
     version = f.read()
 FPS = 60
+view_log_level = "INFO"
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)

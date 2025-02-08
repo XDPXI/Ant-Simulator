@@ -9,12 +9,11 @@ import sys
 
 import pygame
 import screeninfo
-from colorama import init
 
 from core import perlin, settings, update_checker, logging
 from gui import slider, button, progress_bar
 
-init(autoreset=True)
+logging.setup("INFO")
 
 update_checker.check_updates()
 

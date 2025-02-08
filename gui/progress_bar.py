@@ -40,7 +40,7 @@ class ProgressBar:
 
     def set_value(self, value: float):
         self.value = max(self.min_value, min(self.max_value, value))
-        logging.info(f"ProgressBar '{self.label}' value updated to {self.value:.2f}")
+        logging.debug(f"ProgressBar '{self.label}' value updated to {self.value:.2f}")
 
     def get_value(self) -> float:
         return self.value
