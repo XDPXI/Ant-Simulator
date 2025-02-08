@@ -1,10 +1,11 @@
-import logging
-
 import numpy as np
 import pygame
 import screeninfo
 
-version = "1.2.2"
+import logging
+
+with open("version.txt") as f:
+    version = f.read()
 FPS = 60
 
 BG_COLOR = (118, 97, 77)
@@ -23,7 +24,7 @@ logging.info("Fonts loaded.")
 camera_x, camera_y = 0, 0
 camera_speed = 10
 
-nest_location = (MAP_WIDTH // 2, MAP_HEIGHT // 2)
+nest_location = (MAP_WIDTH // 2, -3)
 food_locations = set()
 pheromone_map = np.zeros((MAP_WIDTH, MAP_HEIGHT))
 

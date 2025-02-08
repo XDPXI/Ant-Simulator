@@ -1,4 +1,3 @@
-import logging
 import math
 import os
 import platform
@@ -6,15 +5,17 @@ import random
 
 import pygame
 import screeninfo
+from colorama import init
+from noise import snoise2
 
-from core import perlin, settings, update_checker
+from core import perlin, settings, update_checker, logging
 from gui import slider, button
+
+init(autoreset=True)
 
 update_checker.check_updates()
 
 pygame.init()
-
-logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 
 logging.info("Pygame initialized.")
 font = pygame.font.Font(None, 36)
@@ -38,8 +39,8 @@ if platform.system() == "Windows":
 perlin_settings = perlin.PerlinNoiseSettings()
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
 seed_slider = slider.Slider(10, 50, 300, 0, 1000, perlin_settings.seed)
-ant_slider = slider.Slider(10, 90, 300, 1, 1000, 10)
-speed_slider = slider.Slider(10, 130, 300, 0.0, 5.0, 0.5)
+ant_slider = slider.Slider(10, 90, 300, 1, 100, 10)
+speed_slider = slider.Slider(10, 130, 300, 0.0, 10.0, 0.5)
 start_button = button.Button(10, 170, 300, 50, "Start")
 
 icon = pygame.image.load("assets/icon.png").convert_alpha()
@@ -48,6 +49,9 @@ logging.info("Window and icon initialized.")
 
 sun_image = pygame.image.load("assets/sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
+
+ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
+ant_nest = pygame.transform.scale(ant_nest, (153, 69))
 
 
 class Ant:
@@ -62,13 +66,15 @@ class Ant:
         self.speed = speed
         self.vision_range = 10
         self.vision_angle = math.pi / 3
-        logging.info(f"Ant spawned at ({self.x}, {self.y})")
+        logging.debug(f"Ant spawned at ({self.x}, {self.y})")
 
     def check_collision(self, x, y):
         grid_x, grid_y = int(x), int(y)
-        return (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
-                grid_y < 0 or grid_y >= settings.MAP_HEIGHT or
-                perlin_settings.map_data[grid_x][grid_y] == 1)
+        collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
+                     grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
+                     (grid_y >= 0 and perlin_settings.map_data[grid_x][grid_y] == 1))
+        logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
+        return collision
 
     def check_food_in_vision(self, food_locations):
         for food in food_locations:
@@ -193,7 +199,7 @@ while settings.running:
     screen.fill("#87CEEB")
     pygame.draw.rect(screen, settings.BG_COLOR,
                      (0 - settings.camera_x, 0 - settings.camera_y, settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT))
-    
+
     settings.MONITOR_WIDTH = screeninfo.get_monitors()[0].width
     settings.MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 
@@ -253,7 +259,9 @@ while settings.running:
                         seed_slider.value):
                     perlin_settings.threshold = threshold_slider.value
                     perlin_settings.seed = int(seed_slider.value)
-                    perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin_settings.seed)
+                    perlin_settings.noise_generator = lambda x, y: snoise2(x / perlin_settings.scale,
+                                                                           y / perlin_settings.scale, octaves=1,
+                                                                           base=perlin_settings.seed)
                     perlin_settings.map_data = perlin_settings.generate_map()
 
             ant_slider.handle_event(event)
@@ -284,18 +292,9 @@ while settings.running:
                 pygame.draw.rect(screen, settings.WALL_COLOR,
                                  ((x * 10) - settings.camera_x, (y * 10) - settings.camera_y, 10, 10))
 
-    pygame.draw.rect(screen, pygame.Color(settings.NEST_COLOR),
-                     ((settings.nest_location[0] * 10) - settings.camera_x,
-                      (settings.nest_location[1] * 10) - settings.camera_y, 10, 10))
-
     for food in settings.food_locations:
         pygame.draw.rect(screen, pygame.Color(settings.FOOD_COLOR),
                          ((food[0] * 10) - settings.camera_x, (food[1] * 10) - settings.camera_y, 10, 10))
-
-    for ant in settings.ants:
-        ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
-        pygame.draw.circle(screen, ant_color,
-                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
 
     pheromone_surface = pygame.Surface((settings.MAP_WIDTH * 10, settings.MAP_HEIGHT * 10), pygame.SRCALPHA)
     for x in range(settings.MAP_WIDTH):
@@ -319,6 +318,13 @@ while settings.running:
 
     screen.blit(sun_image, ((settings.MONITOR_WIDTH - 400) - +settings.camera_x, -900 - settings.camera_y))
     pygame.draw.rect(screen, "#4F7942", (0 - settings.camera_x, -50 - settings.camera_y, settings.MONITOR_WIDTH, 50))
+
+    for ant in settings.ants:
+        ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
+        pygame.draw.circle(screen, ant_color,
+                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
+
+    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (153 // 2)) - +settings.camera_x, -63 - settings.camera_y))
 
     if settings.ui_visible:
         threshold_slider.draw(screen)

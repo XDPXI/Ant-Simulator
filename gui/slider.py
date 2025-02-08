@@ -1,9 +1,8 @@
-import logging
 from typing import Tuple
 
 import pygame
 
-from core import settings
+from core import settings, logging
 
 SLIDER_HEIGHT = 20
 HANDLE_WIDTH = 10
