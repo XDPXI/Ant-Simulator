@@ -30,6 +30,7 @@ pheromone_map = np.zeros((MAP_WIDTH, MAP_HEIGHT))
 
 clock = pygame.time.Clock()
 running = True
+paused = False
 ui_visible = True
 ants = []
 drawing_food = False

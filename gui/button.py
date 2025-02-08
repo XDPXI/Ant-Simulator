@@ -10,10 +10,9 @@ HOVER_DARKEN_FACTOR = 0.8
 
 
 class Button:
-    def __init__(self, x: int, y: int, width: int, height: int, text: str,
+    def __init__(self, x: int, y: int, width: int, height: int, text: str, font_size: int = DEFAULT_FONT_SIZE,
                  color: Tuple[int, int, int] = (0, 128, 255),
                  text_color: Tuple[int, int, int] = (255, 255, 255),
-                 font_size: int = DEFAULT_FONT_SIZE,
                  on_click: Callable[[], None] = None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
