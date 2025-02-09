@@ -4,16 +4,7 @@ import random
 import pygame
 
 import settings
-from core import logging, perlin
-
-
-def check_collision(x, y):
-    grid_x, grid_y = int(x), int(y)
-    collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
-                 grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
-                 (grid_y >= 0 and perlin.perlin_settings.map_data[grid_x][grid_y] == 1))
-    logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
-    return collision
+from core import logging, collision
 
 
 class Ant:
@@ -51,7 +42,7 @@ class Ant:
         for i in range(1, steps):
             x = self.x + dx * i / steps
             y = self.y + dy * i / steps
-            if check_collision(x, y):
+            if collision.check_collision(x, y):
                 return True
         return False
 
@@ -74,7 +65,7 @@ class Ant:
         new_x = self.x + dx
         new_y = self.y + dy
 
-        if not check_collision(new_x, new_y):
+        if not collision.check_collision(new_x, new_y):
             self.x = new_x
             self.y = new_y
             self.angle = math.atan2(dy, dx)
@@ -87,7 +78,7 @@ class Ant:
             new_x = self.x + math.cos(self.angle) * self.speed
             new_y = self.y + math.sin(self.angle) * self.speed
 
-            if not check_collision(new_x, new_y):
+            if not collision.check_collision(new_x, new_y):
                 self.x = new_x
                 self.y = new_y
                 break

@@ -1,6 +1,8 @@
 import os
 
-os.system("pip install -r requirements.txt")
+file_path = 'args\\no-install-required-packages.'
+if not os.path.exists(file_path):
+    os.system("pip install -r requirements.txt")
 
 import platform
 import random
@@ -8,6 +10,7 @@ import sys
 
 import pygame
 import screeninfo
+import argparse
 
 from entities import worker, queen, soldier
 from core import perlin, update_checker, logging
@@ -15,6 +18,25 @@ import settings
 from gui import slider, button, progress_bar
 
 logging.setup("INFO")
+
+parser = argparse.ArgumentParser(description="A 2D pixelated game where ants forage for survival in a simulated world.")
+parser.add_argument("--no-install", choices=["true", "false"],
+                    help="Disables the automatic installation of required packages.")
+args = parser.parse_args()
+
+no_install = args.no_install.lower() == "true" if args.no_install else False
+if no_install:
+    logging.info("Automatic installation is disabled.")
+    logging.warn(
+        "Please install the required packages manually using the provided requirements.txt file or issues will occur!")
+    directory = "args"
+    os.makedirs(directory, exist_ok=True)
+    with open(file_path, 'w') as file:
+        file.write("")
+else:
+    logging.info("Automatic installation is enabled.")
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
 update_checker.check_updates()
 
@@ -25,22 +47,21 @@ font = pygame.font.Font(None, 36)
 
 pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
+settings.FULLSCREEN = True
 
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
-    settings.FULLSCREEN = True
 if platform.system() == "Windows":
-    if settings.MONITOR_WIDTH < 1920 and settings.MONITOR_HEIGHT < 1080:
-        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
-        settings.FULLSCREEN = True
-    else:
-        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.RESIZABLE)
-        settings.FULLSCREEN = False
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
+icon = pygame.image.load("assets/icon.png").convert_alpha()
+pygame.display.set_icon(icon)
+logging.info("Window and icon initialized.")
+
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
 seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
+seed_button_value = perlin.perlin_settings.seed
 ant_slider = slider.Slider(10, 100, 300, 1, 1000, 50)
 soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
@@ -48,12 +69,6 @@ food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0,
                                             label="Food")
 speed_slider = slider.Slider(10, 220, 300, 0.0, 10.0, 0.5)
 start_button = button.Button(10, 260, 300, 50, "Start", 40)
-
-seed_button_value = perlin.perlin_settings.seed
-
-icon = pygame.image.load("assets/icon.png").convert_alpha()
-pygame.display.set_icon(icon)
-logging.info("Window and icon initialized.")
 
 sun_image = pygame.image.load("assets/sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
@@ -73,7 +88,6 @@ def regenerate_perlin_map():
             for ANT in settings.ants:
                 ANT.x = settings.nest_location[0]
                 ANT.y = settings.nest_location[1]
-            # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
 
 
 logging.info("Game loop started.")
