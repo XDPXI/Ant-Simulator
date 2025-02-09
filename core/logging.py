@@ -37,5 +37,5 @@ def warn(message: str):
 def error(message: str):
     timestamp = get_current_time()
     log_message = f"{Fore.RED}ERROR: {Style.RESET_ALL}{message}"
-    if view_log_level == "DEBUG" or view_log_level == "INFO" or view_log_level == "WARN" or view_log_level == "ERROR":
+    if settings.view_log_level == "DEBUG" or settings.view_log_level == "INFO" or settings.view_log_level == "WARN" or settings.view_log_level == "ERROR":
         print(f"{timestamp} - {log_message}")
