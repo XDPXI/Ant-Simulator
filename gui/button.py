@@ -2,7 +2,7 @@ from typing import Tuple, Callable
 
 import pygame
 
-from core import settings
+import settings
 
 DEFAULT_FONT_SIZE = 40
 BORDER_WIDTH = 2

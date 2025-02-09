@@ -1,8 +1,8 @@
+import logging
+
 import numpy as np
 import pygame
 import screeninfo
-
-import logging
 
 with open("version.txt") as f:
     version = f.read()
@@ -11,7 +11,9 @@ view_log_level = "INFO"
 
 BG_COLOR = (118, 97, 77)
 WALL_COLOR = (77, 62, 49)
-ANT_COLOR = "#000000"
+ANT_COLOR = "#bf360c"
+SOLDIER_COLOR = "#8c2708"
+QUEEN_COLOR = "#722007"
 NEST_COLOR = "#9c8065"
 FOOD_COLOR = "#D2042D"
 MONITOR_WIDTH = screeninfo.get_monitors()[0].width
@@ -34,6 +36,8 @@ running = True
 paused = False
 ui_visible = True
 ants = []
+soldiers = []
+queen = []
 drawing_food = False
 total_food = 0
 old_total_food = 0

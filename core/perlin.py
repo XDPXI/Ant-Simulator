@@ -3,7 +3,8 @@ import random
 import numpy as np
 from perlin_noise import PerlinNoise
 
-from core import settings, logging
+import settings
+from core import logging
 
 
 class PerlinNoiseSettings:
@@ -20,3 +21,6 @@ class PerlinNoiseSettings:
             [1 if self.noise_generator([X / self.scale, Y / self.scale]) > self.threshold else 0
              for Y in range(settings.MAP_HEIGHT)] for X in range(settings.MAP_WIDTH)
         ])
+
+
+perlin_settings = PerlinNoiseSettings()

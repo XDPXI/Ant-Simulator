@@ -2,12 +2,13 @@ from datetime import datetime
 
 from colorama import init, Fore, Style
 
-from core import settings
+import settings
 
 
 def setup(log_level: str):
     init(autoreset=True)
     settings.view_log_level = log_level
+
 
 def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]

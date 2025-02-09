@@ -1,4 +1,5 @@
-from core import settings, logging
+import settings
+from core import logging
 
 
 def check_updates():

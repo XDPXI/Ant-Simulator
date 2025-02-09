@@ -3,3 +3,4 @@ pygame
 screeninfo
 perlin-noise
 colorama
+flake8

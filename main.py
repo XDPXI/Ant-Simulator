@@ -2,7 +2,6 @@ import os
 
 os.system("pip install -r requirements.txt")
 
-import math
 import platform
 import random
 import sys
@@ -10,7 +9,9 @@ import sys
 import pygame
 import screeninfo
 
-from core import perlin, settings, update_checker, logging
+from entities import worker, queen, soldier
+from core import perlin, update_checker, logging
+import settings
 from gui import slider, button, progress_bar
 
 logging.setup("INFO")
@@ -38,16 +39,36 @@ if platform.system() == "Windows":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
-perlin_settings = perlin.PerlinNoiseSettings()
-threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin_settings.threshold)
+threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
 seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
-ant_slider = slider.Slider(10, 100, 300, 1, 1000, 10)
+ant_slider = slider.Slider(10, 100, 300, 1, 1000, 50)
+soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
+queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
 food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
                                             label="Food")
-speed_slider = slider.Slider(10, 140, 300, 0.0, 10.0, 0.5)
-start_button = button.Button(10, 180, 300, 50, "Start", 40)
+speed_slider = slider.Slider(10, 220, 300, 0.0, 10.0, 0.5)
+start_button = button.Button(10, 260, 300, 50, "Start", 40)
+stop_button = button.Button(10, 140, 300, 50, "Stop", 40)
 
-seed_button_value = perlin_settings.seed
+def regenerate_perlin_map():
+    if perlin.perlin_settings.threshold != threshold_slider.value or perlin.perlin_settings.seed != int(
+            seed_button_value):
+        perlin.perlin_settings.threshold = threshold_slider.value
+        perlin.perlin_settings.seed = int(seed_button_value)
+        perlin.perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin.perlin_settings.seed)
+        perlin.perlin_settings.map_data = perlin.perlin_settings.generate_map()
+        if not settings.ui_visible:
+            for ant in settings.ants:
+                ant.x = settings.nest_location[0]
+                ant.y = settings.nest_location[1]
+            # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
+
+seed_button_value = perlin.perlin_settings.seed
+if os.path.exists("settings.tmp"):
+    with open("settings.tmp", "r") as file:
+        seed_button_value = int(file.read())
+        regenerate_perlin_map()
+    os.remove("settings.tmp")
 
 icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
@@ -57,162 +78,7 @@ sun_image = pygame.image.load("assets/sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
-ant_nest = pygame.transform.scale(ant_nest, (153, 69))
-
-
-class Ant:
-    def __init__(self, x, y, nest_location, pheromone_map, speed):
-        self.x = x
-        self.y = y
-        self.nest_location = nest_location
-        self.has_food = False
-        self.pheromone_map = pheromone_map
-        self.color = pygame.Color(settings.ANT_COLOR)
-        self.angle = random.uniform(0, 2 * math.pi)
-        self.speed = speed
-        self.vision_range = 10
-        self.vision_angle = math.pi / 3
-        logging.debug(f"Ant spawned at ({self.x}, {self.y})")
-
-    def check_collision(self, x, y):
-        grid_x, grid_y = int(x), int(y)
-        collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
-                     grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
-                     (grid_y >= 0 and perlin_settings.map_data[grid_x][grid_y] == 1))
-        logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
-        return collision
-
-    def check_food_in_vision(self, food_locations):
-        for food in food_locations:
-            dx = food[0] - self.x
-            dy = food[1] - self.y
-            distance = math.hypot(dx, dy)
-            if distance <= self.vision_range:
-                angle = math.atan2(dy, dx)
-                angle_diff = (angle - self.angle + math.pi) % (2 * math.pi) - math.pi
-                if abs(angle_diff) <= self.vision_angle / 2:
-                    if not self.check_line_of_sight(food):
-                        return food
-        return None
-
-    def check_line_of_sight(self, target):
-        dx = target[0] - self.x
-        dy = target[1] - self.y
-        distance = math.hypot(dx, dy)
-        steps = int(distance * 2)
-        for i in range(1, steps):
-            x = self.x + dx * i / steps
-            y = self.y + dy * i / steps
-            if self.check_collision(x, y):
-                return True
-        return False
-
-    def move(self):
-        food_in_vision = self.check_food_in_vision(settings.food_locations)
-        if food_in_vision:
-            self.move_towards(food_in_vision)
-        else:
-            self.random_walk()
-
-    def move_towards(self, target):
-        dx = target[0] - self.x
-        dy = target[1] - self.y
-        distance = math.hypot(dx, dy)
-
-        if distance > self.speed:
-            dx = dx / distance * self.speed
-            dy = dy / distance * self.speed
-
-        new_x = self.x + dx
-        new_y = self.y + dy
-
-        if not self.check_collision(new_x, new_y):
-            self.x = new_x
-            self.y = new_y
-            self.angle = math.atan2(dy, dx)
-        else:
-            self.random_walk()
-
-    def random_walk(self):
-        for _ in range(10):
-            self.angle += random.uniform(-0.5, 0.5)
-            new_x = self.x + math.cos(self.angle) * self.speed
-            new_y = self.y + math.sin(self.angle) * self.speed
-
-            if not self.check_collision(new_x, new_y):
-                self.x = new_x
-                self.y = new_y
-                break
-        else:
-            pass
-
-        pheromone_strength = self.get_pheromone_strength(int(self.x), int(self.y))
-        if pheromone_strength > 0:
-            self.follow_pheromone()
-
-    def follow_pheromone(self):
-        strongest_pheromone = 0
-        strongest_direction = (0, 0)
-
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue
-                x = int(self.x + dx)
-                y = int(self.y + dy)
-                if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:
-                    pheromone = self.pheromone_map[x][y]
-                    if pheromone > strongest_pheromone:
-                        strongest_pheromone = pheromone
-                        strongest_direction = (dx, dy)
-
-        if strongest_direction != (0, 0):
-            target_angle = math.atan2(strongest_direction[1], strongest_direction[0])
-            angle_diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
-            self.angle += angle_diff * 0.1
-
-    def get_pheromone_strength(self, x, y):
-        return self.pheromone_map[x % settings.MAP_WIDTH][y % settings.MAP_HEIGHT]
-
-    def leave_pheromone(self):
-        x, y = int(self.x), int(self.y)
-        self.pheromone_map[x % settings.MAP_WIDTH][y % settings.MAP_HEIGHT] = 1
-
-    def find_food(self, food_locations):
-        for food in food_locations:
-            if math.hypot(self.x - food[0], self.y - food[1]) < 1:
-                food_locations.remove(food)
-                self.has_food = True
-                return True
-        return False
-
-    def return_to_nest(self):
-        dx = self.nest_location[0] - self.x
-        dy = self.nest_location[1] - self.y
-        distance = math.hypot(dx, dy)
-
-        if distance < 1:
-            if self.has_food:
-                self.has_food = False
-                return True
-        else:
-            self.move_towards(self.nest_location)
-            self.leave_pheromone()
-        return False
-
-
-def regenerate_perlin_map():
-    if perlin_settings.threshold != threshold_slider.value or perlin_settings.seed != int(
-            seed_button_value):
-        perlin_settings.threshold = threshold_slider.value
-        perlin_settings.seed = int(seed_button_value)
-        perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin_settings.seed)
-        perlin_settings.map_data = perlin_settings.generate_map()
-        if not settings.ui_visible:
-            for ant in settings.ants:
-                ant.x = settings.nest_location[0]
-                ant.y = settings.nest_location[1]
-            # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
+ant_nest = pygame.transform.scale(ant_nest, (100, 50))
 
 
 logging.info("Game loop started.")
@@ -261,7 +127,7 @@ while settings.running:
                 grid_y = (y + settings.camera_y) // 10
                 if not threshold_slider.is_hovered or not seed_button.is_hovered or not speed_slider.is_hovered or not ant_slider.is_hovered or not start_button.is_hovered:
                     try:
-                        if not perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
+                        if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
                             settings.food_locations.add((grid_x, grid_y))
                             settings.total_food += 1
                     except:
@@ -287,16 +153,28 @@ while settings.running:
             regenerate_perlin_map()
 
         ant_slider.handle_event(event)
+        soldier_slider.handle_event(event)
+        queen_slider.handle_event(event)
         speed_slider.handle_event(event)
 
         if start_button.handle_event(event) and settings.button_type:
             settings.ui_visible = False
-            settings.ants = [Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                 settings.pheromone_map, speed_slider.value)
+            settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                        settings.pheromone_map, speed_slider.value)
                              for _ in range(int(ant_slider.value))]
+            settings.soldiers = [soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                                 settings.pheromone_map, speed_slider.value)
+                                 for _ in range(int(soldier_slider.value))]
+            settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                          settings.pheromone_map, speed_slider.value)
+                              for _ in range(1)]
             settings.total_food = len(settings.food_locations)
             settings.collected_food = 0
-
+        if stop_button.handle_event(event):
+            with open("settings.tmp", 'w') as file:
+                file.write(str(perlin.perlin_settings.seed))
+            os.system("start main.py")
+            sys.exit(1)
     if not settings.ui_visible:
         for Ant in settings.ants:
             if Ant.has_food:
@@ -306,11 +184,16 @@ while settings.running:
                 Ant.move()
                 if Ant.find_food(settings.food_locations):
                     Ant.leave_pheromone()
+        if queen_slider.value == 1:
+            for Soldier in settings.soldiers:
+                Soldier.move()
+            for Queen in settings.queen:
+                Queen.move()
         settings.pheromone_map *= 0.99
 
     for x in range(settings.MAP_WIDTH):
         for y in range(settings.MAP_HEIGHT):
-            if perlin_settings.map_data[x, y] == 1:
+            if perlin.perlin_settings.map_data[x, y] == 1:
                 pygame.draw.rect(screen, settings.WALL_COLOR,
                                  ((x * 10) - settings.camera_x, (y * 10) - settings.camera_y, 10, 10))
 
@@ -345,30 +228,49 @@ while settings.running:
         ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
         pygame.draw.circle(screen, ant_color,
                            (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
+    for soldier in settings.soldiers:
+        ant_color = pygame.Color(settings.SOLDIER_COLOR)
+        pygame.draw.circle(screen, ant_color,
+                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 4)
+    for queen in settings.queen:
+        ant_color = pygame.Color(settings.QUEEN_COLOR)
+        pygame.draw.circle(screen, ant_color,
+                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 6)
 
-    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (153 // 2)) - +settings.camera_x, -63 - settings.camera_y))
+    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - +settings.camera_x, -50 - settings.camera_y))
 
     threshold_slider.draw(screen)
     seed_button.draw(screen)
 
-    text_threshold = render_text_with_border(f"Threshold: {perlin_settings.threshold:.2f}", (255, 255, 255))
-    text_seed = render_text_with_border(f"Seed: {perlin_settings.seed}", (255, 255, 255))
+    text_threshold = render_text_with_border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
+    text_seed = render_text_with_border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
 
     if settings.ui_visible:
         ant_slider.draw(screen)
+        soldier_slider.draw(screen)
+        queen_slider.draw(screen)
         speed_slider.draw(screen)
         start_button.draw(screen)
 
-        text_ants = render_text_with_border(f"Ants: {int(ant_slider.value)}", (255, 255, 255))
+        text_ants = render_text_with_border(f"Workers: {int(ant_slider.value)}", (255, 255, 255))
+        text_soldiers = render_text_with_border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
+        if queen_slider.value == 1:
+            text_queen = render_text_with_border("Enable Queen: Yes", (255, 255, 255))
+        else:
+            text_queen = render_text_with_border("Enable Queen: No", (255, 255, 255))
         text_speed = render_text_with_border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
 
         screen.blit(text_ants, (320, 99))
-        screen.blit(text_speed, (320, 139))
+        screen.blit(text_soldiers, (320, 139))
+        screen.blit(text_queen, (320, 179))
+        screen.blit(text_speed, (320, 219))
     else:
         food_progressbar.draw(screen)
+        stop_button.draw(screen)
+
         food_progressbar.set_value(settings.collected_food)
         food_progressbar.max_value = settings.total_food
 
