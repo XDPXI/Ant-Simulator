@@ -48,7 +48,19 @@ food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0,
                                             label="Food")
 speed_slider = slider.Slider(10, 220, 300, 0.0, 10.0, 0.5)
 start_button = button.Button(10, 260, 300, 50, "Start", 40)
-stop_button = button.Button(10, 140, 300, 50, "Stop", 40)
+
+seed_button_value = perlin.perlin_settings.seed
+
+icon = pygame.image.load("assets/icon.png").convert_alpha()
+pygame.display.set_icon(icon)
+logging.info("Window and icon initialized.")
+
+sun_image = pygame.image.load("assets/sun.png").convert_alpha()
+sun_image = pygame.transform.scale(sun_image, (300, 300))
+
+ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
+ant_nest = pygame.transform.scale(ant_nest, (100, 50))
+
 
 def regenerate_perlin_map():
     if perlin.perlin_settings.threshold != threshold_slider.value or perlin.perlin_settings.seed != int(
@@ -62,23 +74,6 @@ def regenerate_perlin_map():
                 ant.x = settings.nest_location[0]
                 ant.y = settings.nest_location[1]
             # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
-
-seed_button_value = perlin.perlin_settings.seed
-if os.path.exists("settings.tmp"):
-    with open("settings.tmp", "r") as file:
-        seed_button_value = int(file.read())
-        regenerate_perlin_map()
-    os.remove("settings.tmp")
-
-icon = pygame.image.load("assets/icon.png").convert_alpha()
-pygame.display.set_icon(icon)
-logging.info("Window and icon initialized.")
-
-sun_image = pygame.image.load("assets/sun.png").convert_alpha()
-sun_image = pygame.transform.scale(sun_image, (300, 300))
-
-ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
-ant_nest = pygame.transform.scale(ant_nest, (100, 50))
 
 
 logging.info("Game loop started.")
@@ -170,11 +165,6 @@ while settings.running:
                               for _ in range(1)]
             settings.total_food = len(settings.food_locations)
             settings.collected_food = 0
-        if stop_button.handle_event(event):
-            with open("settings.tmp", 'w') as file:
-                file.write(str(perlin.perlin_settings.seed))
-            os.system("start main.py")
-            sys.exit(1)
     if not settings.ui_visible:
         for Ant in settings.ants:
             if Ant.has_food:
@@ -184,7 +174,7 @@ while settings.running:
                 Ant.move()
                 if Ant.find_food(settings.food_locations):
                     Ant.leave_pheromone()
-        if queen_slider.value == 1:
+        if queen_slider.value >= 0.5:
             for Soldier in settings.soldiers:
                 Soldier.move()
             for Queen in settings.queen:
@@ -257,7 +247,7 @@ while settings.running:
 
         text_ants = render_text_with_border(f"Workers: {int(ant_slider.value)}", (255, 255, 255))
         text_soldiers = render_text_with_border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
-        if queen_slider.value == 1:
+        if queen_slider.value >= 0.5:
             text_queen = render_text_with_border("Enable Queen: Yes", (255, 255, 255))
         else:
             text_queen = render_text_with_border("Enable Queen: No", (255, 255, 255))
@@ -269,7 +259,6 @@ while settings.running:
         screen.blit(text_speed, (320, 219))
     else:
         food_progressbar.draw(screen)
-        stop_button.draw(screen)
 
         food_progressbar.set_value(settings.collected_food)
         food_progressbar.max_value = settings.total_food
