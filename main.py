@@ -88,6 +88,12 @@ def regenerate_perlin_map():
             for ANT in settings.ants:
                 ANT.x = settings.nest_location[0]
                 ANT.y = settings.nest_location[1]
+            for SOLDIER in settings.soldiers:
+                SOLDIER.x = settings.nest_location[0]
+                SOLDIER.y = settings.nest_location[1]
+            for QUEEN in settings.queen:
+                QUEEN.x = settings.nest_location[0]
+                QUEEN.y = settings.nest_location[1]
 
 
 logging.info("Game loop started.")
