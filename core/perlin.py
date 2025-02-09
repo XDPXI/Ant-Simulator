@@ -8,7 +8,7 @@ from core import logging
 
 
 class PerlinNoiseSettings:
-    def __init__(self, scale=40.0, threshold=0.1, seed=random.randint(0, 2147483647)):
+    def __init__(self, scale=40.0, threshold=0.1, seed=random.randint(-2147483647, 2147483647)):
         self.scale = scale
         self.threshold = threshold
         self.seed = seed

@@ -7,6 +7,15 @@ import settings
 from core import logging, perlin
 
 
+def check_collision(x, y):
+    grid_x, grid_y = int(x), int(y)
+    collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
+                 grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
+                 (grid_y >= 0 and perlin.perlin_settings.map_data[grid_x][grid_y] == 1))
+    logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
+    return collision
+
+
 class Ant:
     def __init__(self, x, y, nest_location, pheromone_map, speed):
         self.x = x
@@ -20,14 +29,6 @@ class Ant:
         self.vision_range = 10
         self.vision_angle = math.pi / 3
         logging.debug(f"Ant spawned at ({self.x}, {self.y})")
-
-    def check_collision(self, x, y):
-        grid_x, grid_y = int(x), int(y)
-        collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
-                     grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
-                     (grid_y >= 0 and perlin.perlin_settings.map_data[grid_x][grid_y] == 1))
-        logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
-        return collision
 
     def check_food_in_vision(self, food_locations):
         for food in food_locations:
@@ -50,7 +51,7 @@ class Ant:
         for i in range(1, steps):
             x = self.x + dx * i / steps
             y = self.y + dy * i / steps
-            if self.check_collision(x, y):
+            if check_collision(x, y):
                 return True
         return False
 
@@ -73,7 +74,7 @@ class Ant:
         new_x = self.x + dx
         new_y = self.y + dy
 
-        if not self.check_collision(new_x, new_y):
+        if not check_collision(new_x, new_y):
             self.x = new_x
             self.y = new_y
             self.angle = math.atan2(dy, dx)
@@ -86,7 +87,7 @@ class Ant:
             new_x = self.x + math.cos(self.angle) * self.speed
             new_y = self.y + math.sin(self.angle) * self.speed
 
-            if not self.check_collision(new_x, new_y):
+            if not check_collision(new_x, new_y):
                 self.x = new_x
                 self.y = new_y
                 break
@@ -99,24 +100,20 @@ class Ant:
 
     def follow_pheromone(self):
         strongest_pheromone = 0
-        strongest_direction = (0, 0)
+        strongest_direction = None
 
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
-                if dx == 0 and dy == 0:
-                    continue
-                x = int(self.x + dx)
-                y = int(self.y + dy)
-                if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:
-                    pheromone = self.pheromone_map[x][y]
-                    if pheromone > strongest_pheromone:
-                        strongest_pheromone = pheromone
-                        strongest_direction = (dx, dy)
+        for dx, dy in [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]:
+            x = int(self.x + dx)
+            y = int(self.y + dy)
+            if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:
+                pheromone = self.pheromone_map[x][y]
+                if pheromone > strongest_pheromone:
+                    strongest_pheromone = pheromone
+                    strongest_direction = (dx, dy)
 
-        if strongest_direction != (0, 0):
+        if strongest_direction:
             target_angle = math.atan2(strongest_direction[1], strongest_direction[0])
-            angle_diff = (target_angle - self.angle + math.pi) % (2 * math.pi) - math.pi
-            self.angle += angle_diff * 0.1
+            self.angle = self.angle + (target_angle - self.angle) * 0.1
 
     def get_pheromone_strength(self, x, y):
         return self.pheromone_map[x % settings.MAP_WIDTH][y % settings.MAP_HEIGHT]

@@ -70,9 +70,9 @@ def regenerate_perlin_map():
         perlin.perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin.perlin_settings.seed)
         perlin.perlin_settings.map_data = perlin.perlin_settings.generate_map()
         if not settings.ui_visible:
-            for ant in settings.ants:
-                ant.x = settings.nest_location[0]
-                ant.y = settings.nest_location[1]
+            for ANT in settings.ants:
+                ANT.x = settings.nest_location[0]
+                ANT.y = settings.nest_location[1]
             # settings.pheromone_map = np.zeros((settings.MAP_WIDTH, settings.MAP_HEIGHT))
 
 
@@ -125,7 +125,7 @@ while settings.running:
                         if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
                             settings.food_locations.add((grid_x, grid_y))
                             settings.total_food += 1
-                    except:
+                    except IndexError:
                         print("Invalid grid position")
                 else:
                     settings.drawing_food = False
@@ -143,7 +143,7 @@ while settings.running:
             regenerate_perlin_map()
 
         if seed_button.handle_event(event):
-            seed_button_value = random.randint(0, 2147483647)
+            seed_button_value = random.randint(-2147483647, 2147483647)
             settings.food_locations = set()
             regenerate_perlin_map()
 

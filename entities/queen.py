@@ -7,6 +7,15 @@ import settings
 from core import logging, perlin
 
 
+def check_collision(x, y):
+    grid_x, grid_y = int(x), int(y)
+    collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
+                 grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
+                 (grid_y >= 0 and perlin.perlin_settings.map_data[grid_x][grid_y] == 1))
+    logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
+    return collision
+
+
 class Queen:
     def __init__(self, x, y, nest_location, pheromone_map, speed):
         self.x = x
@@ -20,14 +29,6 @@ class Queen:
         self.vision_range = 10
         self.vision_angle = math.pi / 3
         logging.debug(f"Soldier spawned at ({self.x}, {self.y})")
-
-    def check_collision(self, x, y):
-        grid_x, grid_y = int(x), int(y)
-        collision = (grid_x < 0 or grid_x >= settings.MAP_WIDTH or
-                     grid_y < -4.5 or grid_y >= settings.MAP_HEIGHT or
-                     (grid_y >= 0 and perlin.perlin_settings.map_data[grid_x][grid_y] == 1))
-        logging.debug(f"Collision at ({grid_x}, {grid_y}): {collision}")
-        return collision
 
     def move(self):
         self.random_walk()
@@ -46,7 +47,7 @@ class Queen:
             self.x = nest_x + dx * scale
             self.y = nest_y + dy * scale
 
-        if self.check_collision(self.x, self.y):
+        if check_collision(self.x, self.y):
             self.x = nest_x + dx * (radius - 1) / distance
             self.y = nest_y + dy * (radius - 1) / distance
 
@@ -56,7 +57,7 @@ class Queen:
             new_x = self.x + math.cos(self.angle) * self.speed
             new_y = self.y + math.sin(self.angle) * self.speed
 
-            if not self.check_collision(new_x, new_y):
+            if not check_collision(new_x, new_y):
                 self.x = new_x
                 self.y = new_y
                 break
