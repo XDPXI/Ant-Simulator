@@ -1,6 +1,7 @@
 import settings
 from entities import worker
 
+
 def draw(eventPos, threshold_slider, seed_button, speed_slider, start_button):
     if not settings.ui_visible:
         x, y = eventPos

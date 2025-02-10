@@ -76,6 +76,7 @@ sun_image = pygame.transform.scale(sun_image, (300, 300))
 ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
 ant_nest = pygame.transform.scale(ant_nest, (100, 50))
 
+
 def regenerate_perlin_map():
     if perlin.perlin_settings.threshold != threshold_slider.value or perlin.perlin_settings.seed != int(
             seed_button_value):
@@ -183,9 +184,10 @@ while settings.running:
             settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                         settings.pheromone_map, speed_slider.value)
                              for _ in range(int(settings.ant_slider.value))]
-            settings.soldiers = [soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                                 settings.pheromone_map, speed_slider.value)
-                                 for _ in range(int(soldier_slider.value))]
+            settings.soldiers = [
+                soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                settings.pheromone_map, speed_slider.value)
+                for _ in range(int(soldier_slider.value))]
             settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                           settings.pheromone_map, speed_slider.value)
                               for _ in range(1)]

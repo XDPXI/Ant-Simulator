@@ -5,6 +5,7 @@ import pygame
 import screeninfo
 
 from gui import slider
+
 with open("version.txt") as f:
     version = f.read()
 FPS = 60

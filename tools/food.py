@@ -1,6 +1,7 @@
 import settings
 from core import perlin
 
+
 def draw(eventPos, threshold_slider, seed_button, speed_slider, ant_slider, start_button):
     x, y = eventPos
     grid_x = (x + settings.camera_x) // 10
