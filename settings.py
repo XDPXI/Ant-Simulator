@@ -4,6 +4,7 @@ import numpy as np
 import pygame
 import screeninfo
 
+from gui import slider
 with open("version.txt") as f:
     version = f.read()
 FPS = 60
@@ -39,7 +40,12 @@ ants = []
 soldiers = []
 queen = []
 drawing_food = False
+drawing_ant = False
+drawing_magnet = False
 total_food = 0
 old_total_food = 0
 collected_food = 0
 button_type = True
+selected_tool = 1
+
+ant_slider = slider.Slider(10, 100, 300, 1, 1000, 50)

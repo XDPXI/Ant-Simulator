@@ -12,6 +12,7 @@ import pygame
 import screeninfo
 import argparse
 
+from tools import ant as ant2, food as food2, magnet
 from entities import worker, queen, soldier
 from core import perlin, update_checker, logging
 import settings
@@ -62,7 +63,6 @@ logging.info("Window and icon initialized.")
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
 seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
 seed_button_value = perlin.perlin_settings.seed
-ant_slider = slider.Slider(10, 100, 300, 1, 1000, 50)
 soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
 food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
@@ -75,7 +75,6 @@ sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
 ant_nest = pygame.transform.scale(ant_nest, (100, 50))
-
 
 def regenerate_perlin_map():
     if perlin.perlin_settings.threshold != threshold_slider.value or perlin.perlin_settings.seed != int(
@@ -115,6 +114,12 @@ while settings.running:
             elif event.key == pygame.K_SPACE:
                 settings.paused = not settings.paused
                 logging.info("Pause event received.")
+            elif event.key == pygame.K_1:
+                settings.selected_tool = 1
+            elif event.key == pygame.K_2:
+                settings.selected_tool = 2
+            elif event.key == pygame.K_3:
+                settings.selected_tool = 3
             elif event.key == pygame.K_f:
                 if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
                     screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
@@ -130,25 +135,26 @@ while settings.running:
                                                          pygame.NOFRAME)
                         settings.FULLSCREEN = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = True
+            elif event.button == 1 and settings.selected_tool == 2:
+                settings.drawing_ant = True
+            elif event.button == 1 and settings.selected_tool == 3:
+                settings.drawing_magnet = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
+            if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = False
+            elif event.button == 1 and settings.selected_tool == 2:
+                settings.drawing_ant = False
+            elif event.button == 1 and settings.selected_tool == 3:
+                settings.drawing_magnet = False
         elif event.type == pygame.MOUSEMOTION:
             if settings.drawing_food:
-                x, y = event.pos
-                grid_x = (x + settings.camera_x) // 10
-                grid_y = (y + settings.camera_y) // 10
-                if not threshold_slider.is_hovered or not seed_button.is_hovered or not speed_slider.is_hovered or not ant_slider.is_hovered or not start_button.is_hovered:
-                    try:
-                        if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
-                            settings.food_locations.add((grid_x, grid_y))
-                            settings.total_food += 1
-                    except IndexError:
-                        print("Invalid grid position")
-                else:
-                    settings.drawing_food = False
+                food2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_ant:
+                ant2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_magnet:
+                magnet.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
         elif event.type == pygame.MOUSEWHEEL:
             new_camera_y = settings.camera_y - (event.y * 20)
 
@@ -167,7 +173,7 @@ while settings.running:
             settings.food_locations = set()
             regenerate_perlin_map()
 
-        ant_slider.handle_event(event)
+        settings.ant_slider.handle_event(event)
         soldier_slider.handle_event(event)
         queen_slider.handle_event(event)
         speed_slider.handle_event(event)
@@ -176,7 +182,7 @@ while settings.running:
             settings.ui_visible = False
             settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                         settings.pheromone_map, speed_slider.value)
-                             for _ in range(int(ant_slider.value))]
+                             for _ in range(int(settings.ant_slider.value))]
             settings.soldiers = [soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                                  settings.pheromone_map, speed_slider.value)
                                  for _ in range(int(soldier_slider.value))]
@@ -254,18 +260,26 @@ while settings.running:
 
     text_threshold = render_text_with_border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
     text_seed = render_text_with_border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
+    text_selected_tool = render_text_with_border(f"Tool: None", (255, 255, 255))
+    if settings.selected_tool == 1:
+        text_selected_tool = render_text_with_border(f"Tool: Food", (255, 255, 255))
+    elif settings.selected_tool == 2:
+        text_selected_tool = render_text_with_border(f"Tool: Ants", (255, 255, 255))
+    elif settings.selected_tool == 3:
+        text_selected_tool = render_text_with_border(f"Tool: Magnet", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
+    screen.blit(text_selected_tool, (10, settings.MONITOR_HEIGHT - 30))
 
     if settings.ui_visible:
-        ant_slider.draw(screen)
+        settings.ant_slider.draw(screen)
         soldier_slider.draw(screen)
         queen_slider.draw(screen)
         speed_slider.draw(screen)
         start_button.draw(screen)
 
-        text_ants = render_text_with_border(f"Workers: {int(ant_slider.value)}", (255, 255, 255))
+        text_ants = render_text_with_border(f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255))
         text_soldiers = render_text_with_border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
         if queen_slider.value >= 0.5:
             text_queen = render_text_with_border("Enable Queen: Yes", (255, 255, 255))
