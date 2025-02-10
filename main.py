@@ -12,7 +12,7 @@ import pygame
 import screeninfo
 import argparse
 
-from tools import ant as ant2, food as food2, magnet
+from tools import ant as ant2, food as food2, magnet, wall, floor
 from entities import worker, queen, soldier
 from core import perlin, update_checker, logging
 import settings
@@ -121,6 +121,10 @@ while settings.running:
                 settings.selected_tool = 2
             elif event.key == pygame.K_3:
                 settings.selected_tool = 3
+            elif event.key == pygame.K_4:
+                settings.selected_tool = 4
+            elif event.key == pygame.K_5:
+                settings.selected_tool = 5
             elif event.key == pygame.K_f:
                 if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
                     screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
@@ -142,6 +146,10 @@ while settings.running:
                 settings.drawing_ant = True
             elif event.button == 1 and settings.selected_tool == 3:
                 settings.drawing_magnet = True
+            elif event.button == 1 and settings.selected_tool == 4:
+                settings.drawing_wall = True
+            elif event.button == 1 and settings.selected_tool == 5:
+                settings.drawing_floor = True
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = False
@@ -149,6 +157,10 @@ while settings.running:
                 settings.drawing_ant = False
             elif event.button == 1 and settings.selected_tool == 3:
                 settings.drawing_magnet = False
+            elif event.button == 1 and settings.selected_tool == 4:
+                settings.drawing_wall = False
+            elif event.button == 1 and settings.selected_tool == 5:
+                settings.drawing_floor = False
         elif event.type == pygame.MOUSEMOTION:
             if settings.drawing_food:
                 food2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
@@ -156,6 +168,10 @@ while settings.running:
                 ant2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
             elif settings.drawing_magnet:
                 magnet.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_wall:
+                wall.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_floor:
+                floor.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
         elif event.type == pygame.MOUSEWHEEL:
             new_camera_y = settings.camera_y - (event.y * 20)
 
@@ -269,6 +285,10 @@ while settings.running:
         text_selected_tool = render_text_with_border(f"Tool: Ants", (255, 255, 255))
     elif settings.selected_tool == 3:
         text_selected_tool = render_text_with_border(f"Tool: Magnet", (255, 255, 255))
+    elif settings.selected_tool == 4:
+        text_selected_tool = render_text_with_border(f"Tool: Wall", (255, 255, 255))
+    elif settings.selected_tool == 5:
+        text_selected_tool = render_text_with_border(f"Tool: Floor", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
