@@ -2,6 +2,7 @@ import os
 
 file_path = 'args\\no-install-required-packages.'
 if not os.path.exists(file_path):
+    os.system("pip install --upgrade pip")
     os.system("pip install -r requirements.txt")
 
 import platform
@@ -151,7 +152,7 @@ while settings.running:
             elif settings.drawing_ant:
                 ant2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
             elif settings.drawing_magnet:
-                magnet.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+                magnet.draw(event.pos)
             elif settings.drawing_wall:
                 wall.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
             elif settings.drawing_floor:
