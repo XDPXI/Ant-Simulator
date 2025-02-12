@@ -48,8 +48,6 @@ font = pygame.font.Font(None, 36)
 
 pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
-settings.FULLSCREEN = True
-
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
 if platform.system() == "Windows":
@@ -125,20 +123,6 @@ while settings.running:
                 settings.selected_tool = 4
             elif event.key == pygame.K_5:
                 settings.selected_tool = 5
-            elif event.key == pygame.K_f:
-                if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
-                    screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
-                    center_x = (settings.MONITOR_WIDTH - 1920) // 2
-                    center_y = (settings.MONITOR_HEIGHT - 1080) // 2
-                    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{center_x},{center_y}"
-                else:
-                    if platform.system() == "Darwin":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
-                                                         pygame.FULLSCREEN)
-                    if platform.system() == "Windows":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
-                                                         pygame.NOFRAME)
-                        settings.FULLSCREEN = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = True
@@ -261,15 +245,15 @@ while settings.running:
     for ant in settings.ants:
         ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
+                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 4)
     for soldier in settings.soldiers:
         ant_color = pygame.Color(settings.SOLDIER_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 4)
+                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
     for queen in settings.queen:
         ant_color = pygame.Color(settings.QUEEN_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 6)
+                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 10)
 
     screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - +settings.camera_x, -50 - settings.camera_y))
 

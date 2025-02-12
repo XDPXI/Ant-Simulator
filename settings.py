@@ -22,7 +22,6 @@ MONITOR_WIDTH = screeninfo.get_monitors()[0].width
 MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
 MAP_WIDTH = MONITOR_WIDTH // 10
 MAP_HEIGHT = MONITOR_HEIGHT // 10
-FULLSCREEN = False
 
 logging.info("Fonts loaded.")
 
