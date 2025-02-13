@@ -27,21 +27,24 @@ class Soldier:
 
     def stay_within_range(self):
         for queen in settings.queen:
-            queen_x, queen_y = queen.x, queen.y
-            radius = 10
+            try:
+                queen_x, queen_y = queen.x, queen.y
+                radius = 10
 
-            dx = self.x - queen_x
-            dy = self.y - queen_y
-            distance = math.hypot(dx, dy)
+                dx = self.x - queen_x
+                dy = self.y - queen_y
+                distance = math.hypot(dx, dy)
 
-            if distance > radius:
-                scale = radius / distance
-                self.x = queen_x + dx * scale
-                self.y = queen_y + dy * scale
+                if distance > radius:
+                    scale = radius / distance
+                    self.x = queen_x + dx * scale
+                    self.y = queen_y + dy * scale
 
-            if collision.check_collision(self.x, self.y):
-                self.x = queen_x + dx * (radius - 1) / distance
-                self.y = queen_y + dy * (radius - 1) / distance
+                if collision.check_collision(self.x, self.y):
+                    self.x = queen_x + dx * (radius - 1) / distance
+                    self.y = queen_y + dy * (radius - 1) / distance
+            except Exception as e:
+                logging.error(f"Error while staying within range: {e}")
 
     def random_walk(self):
         for _ in range(10):

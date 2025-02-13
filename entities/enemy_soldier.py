@@ -7,36 +7,44 @@ import settings
 from core import logging, collision
 
 
-class Ant:
+class EnemySoldier:
     def __init__(self, x, y, nest_location, pheromone_map, speed):
         self.x = x
         self.y = y
-        self.nest_location = nest_location
-        self.has_food = False
-        self.pheromone_map = pheromone_map
-        self.color = pygame.Color(settings.ANT_COLOR)
+        self.color = pygame.Color(settings.ENEMY_COLOR)
         self.angle = random.uniform(0, 2 * math.pi)
         self.speed = speed
         self.vision_range = 10
         self.vision_angle = math.pi / 3
         logging.debug(f"Enemy spawned at ({self.x}, {self.y})")
 
-    def check_food_in_vision(self, food_locations):
-        for food in food_locations:
-            dx = food[0] - self.x
-            dy = food[1] - self.y
-            distance = math.hypot(dx, dy)
-            if distance <= self.vision_range:
-                angle = math.atan2(dy, dx)
-                angle_diff = (angle - self.angle + math.pi) % (2 * math.pi) - math.pi
-                if abs(angle_diff) <= self.vision_angle / 2:
-                    if not self.check_line_of_sight(food):
-                        return food
-        return None
+    def check_ants_in_vision(self):
+        try:
+            entities = [
+                ('ant', settings.ants),
+                ('soldier', settings.soldiers),
+                ('queen', settings.queen)
+            ]
+            for entity_list in entities:
+                for entity in entity_list.copy():
+                    dx = entity.x - self.x
+                    dy = entity.y - self.y
+                    distance = math.hypot(dx, dy)
+                    if distance <= self.vision_range:
+                        angle = math.atan2(dy, dx)
+                        angle_diff = (angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+                        if abs(angle_diff) <= self.vision_angle / 2:
+                            if not self.check_line_of_sight(entity):
+                                return entity
+                    return None
+        except AttributeError:
+            logging.error("Error while checking ants in vision: No ants in sight.")
+            return None
+        
 
     def check_line_of_sight(self, target):
-        dx = target[0] - self.x
-        dy = target[1] - self.y
+        dx = target.x - self.x
+        dy = target.y - self.y
         distance = math.hypot(dx, dy)
         steps = int(distance * 2)
         for i in range(1, steps):
@@ -47,15 +55,15 @@ class Ant:
         return False
 
     def move(self):
-        food_in_vision = self.check_food_in_vision(settings.food_locations)
-        if food_in_vision:
-            self.move_towards(food_in_vision)
+        ant_in_vision = self.check_ants_in_vision()
+        if ant_in_vision:
+            self.move_towards(ant_in_vision)
         else:
             self.random_walk()
 
     def move_towards(self, target):
-        dx = target[0] - self.x
-        dy = target[1] - self.y
+        dx = target.x - self.x
+        dy = target.y - self.y
         distance = math.hypot(dx, dy)
 
         if distance > self.speed:
@@ -84,11 +92,3 @@ class Ant:
                 break
         else:
             pass
-
-    def find_food(self, food_locations):
-        for food in food_locations:
-            if math.hypot(self.x - food[0], self.y - food[1]) < 1:
-                food_locations.remove(food)
-                self.has_food = True
-                return True
-        return False

@@ -13,8 +13,8 @@ import pygame
 import screeninfo
 import argparse
 
-from tools import ant as ant2, food as food2, magnet, wall, floor
-from entities import worker, queen, soldier
+from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
+from entities import worker, queen, soldier, enemy_soldier
 from core import perlin, update_checker, logging
 import settings
 from gui import slider, button, progress_bar
@@ -93,6 +93,9 @@ def regenerate_perlin_map():
             for QUEEN in settings.queen:
                 QUEEN.x = settings.nest_location[0]
                 QUEEN.y = settings.nest_location[1]
+            for ENEMY in settings.enemies:
+                ENEMY.x = settings.MONITOR_WIDTH // 2
+                ENEMY.y = settings.MONITOR_HEIGHT // 2
 
 
 logging.info("Game loop started.")
@@ -124,6 +127,8 @@ while settings.running:
                 settings.selected_tool = 4
             elif event.key == pygame.K_5:
                 settings.selected_tool = 5
+            elif event.key == pygame.K_6:
+                settings.selected_tool = 6
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = True
@@ -135,6 +140,8 @@ while settings.running:
                 settings.drawing_wall = True
             elif event.button == 1 and settings.selected_tool == 5:
                 settings.drawing_floor = True
+            elif event.button == 1 and settings.selected_tool == 6:
+                settings.drawing_enemy = True
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = False
@@ -146,6 +153,8 @@ while settings.running:
                 settings.drawing_wall = False
             elif event.button == 1 and settings.selected_tool == 5:
                 settings.drawing_floor = False
+            elif event.button == 1 and settings.selected_tool == 6:
+                settings.drawing_enemy = False
         elif event.type == pygame.MOUSEMOTION:
             if settings.drawing_food:
                 food2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
@@ -157,6 +166,8 @@ while settings.running:
                 wall.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
             elif settings.drawing_floor:
                 floor.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_enemy:
+                enemy.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
         elif event.type == pygame.MOUSEWHEEL:
             new_camera_y = settings.camera_y - (event.y * 20)
 
@@ -208,6 +219,8 @@ while settings.running:
                 Soldier.move()
             for Queen in settings.queen:
                 Queen.move()
+        for Enemy in settings.enemies:
+            Enemy.move()
         settings.pheromone_map *= 0.99
 
     for x in range(settings.MAP_WIDTH):
@@ -255,6 +268,10 @@ while settings.running:
         ant_color = pygame.Color(settings.QUEEN_COLOR)
         pygame.draw.circle(screen, ant_color,
                            (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 10)
+    for soldier in settings.enemies:
+        ant_color = pygame.Color(settings.ENEMY_COLOR)
+        pygame.draw.circle(screen, ant_color,
+                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
 
     screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - +settings.camera_x, -50 - settings.camera_y))
 
@@ -274,6 +291,8 @@ while settings.running:
         text_selected_tool = render_text_with_border(f"Tool: Wall", (255, 255, 255))
     elif settings.selected_tool == 5:
         text_selected_tool = render_text_with_border(f"Tool: Floor", (255, 255, 255))
+    elif settings.selected_tool == 6:
+        text_selected_tool = render_text_with_border(f"Tool: Enemy", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
