@@ -17,20 +17,17 @@ COLORS = {
 
 
 class Slider:
-    def __init__(self, x: int, y: int, width: int, min_value: float, max_value: float, initial_value: float,
-                 label: str = ""):
+    def __init__(self, x: int, y: int, width: int, min_value: float, max_value: float, initial_value: float):
         self.rect = pygame.Rect(x, y, width, SLIDER_HEIGHT)
         self.min_value = min_value
         self.max_value = max_value
         self.value = max(min_value, min(max_value, initial_value))
-        self.label = label
-        self.font = pygame.font.Font(None, 24)
 
         self.handle_rect = self._calculate_handle_rect()
         self.dragging = False
         self.is_hovered = False
 
-        logging.info(f"Slider '{label}' initialized at ({x}, {y}) with value {self.value}")
+        logging.info(f"Slider initialized at ({x}, {y}) with value {self.value}")
 
     def _calculate_handle_rect(self) -> pygame.Rect:
         handle_x = self.rect.x + (self.value - self.min_value) / (self.max_value - self.min_value) * self.rect.width
@@ -41,21 +38,17 @@ class Slider:
         pygame.draw.rect(surface, COLORS['background'], self.rect)
         pygame.draw.rect(surface, COLORS['handle'], self.handle_rect)
 
-        if self.label:
-            label_surface = self.font.render(f"{self.label}: {self.value:.2f}", True, COLORS['text'])
-            surface.blit(label_surface, (self.rect.x, self.rect.y - 25))
-
     def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.handle_rect.collidepoint(event.pos):
                 self.dragging = True
                 settings.drawing_food = False
-                logging.info(f"Slider '{self.label}' drag started.")
+                logging.info(f"Slider drag started.")
                 return True
         elif event.type == pygame.MOUSEBUTTONUP:
             if self.dragging:
                 self.dragging = False
-                logging.info(f"Slider '{self.label}' value set to {self.value:.2f}")
+                logging.info(f"Slider value set to {self.value:.2f}")
                 return True
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             self.is_hovered = self.rect.collidepoint(event.pos)

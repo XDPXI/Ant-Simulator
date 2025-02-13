@@ -2,6 +2,7 @@ import os
 
 file_path = 'args\\no-install-required-packages.'
 if not os.path.exists(file_path):
+    os.system("pip install --upgrade pip")
     os.system("pip install -r requirements.txt")
 
 import platform
@@ -12,7 +13,8 @@ import pygame
 import screeninfo
 import argparse
 
-from entities import worker, queen, soldier
+from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
+from entities import worker, queen, soldier, enemy_soldier
 from core import perlin, update_checker, logging
 import settings
 from gui import slider, button, progress_bar
@@ -47,8 +49,6 @@ font = pygame.font.Font(None, 36)
 
 pygame.display.set_caption("Ant Simulator")
 screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
-settings.FULLSCREEN = True
-
 if platform.system() == "Darwin":
     screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
 if platform.system() == "Windows":
@@ -62,7 +62,6 @@ logging.info("Window and icon initialized.")
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
 seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
 seed_button_value = perlin.perlin_settings.seed
-ant_slider = slider.Slider(10, 100, 300, 1, 1000, 50)
 soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
 food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
@@ -94,6 +93,9 @@ def regenerate_perlin_map():
             for QUEEN in settings.queen:
                 QUEEN.x = settings.nest_location[0]
                 QUEEN.y = settings.nest_location[1]
+            for ENEMY in settings.enemies:
+                ENEMY.x = settings.MONITOR_WIDTH // 2
+                ENEMY.y = settings.MONITOR_HEIGHT // 2
 
 
 logging.info("Game loop started.")
@@ -115,40 +117,57 @@ while settings.running:
             elif event.key == pygame.K_SPACE:
                 settings.paused = not settings.paused
                 logging.info("Pause event received.")
-            elif event.key == pygame.K_f:
-                if settings.MONITOR_WIDTH > 1920 and settings.MONITOR_HEIGHT > 1080 and not settings.FULLSCREEN:
-                    screen = pygame.display.set_mode((1920, 1080), pygame.RESIZABLE)
-                    center_x = (settings.MONITOR_WIDTH - 1920) // 2
-                    center_y = (settings.MONITOR_HEIGHT - 1080) // 2
-                    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{center_x},{center_y}"
-                else:
-                    if platform.system() == "Darwin":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
-                                                         pygame.FULLSCREEN)
-                    if platform.system() == "Windows":
-                        screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT),
-                                                         pygame.NOFRAME)
-                        settings.FULLSCREEN = True
+            elif event.key == pygame.K_1:
+                settings.selected_tool = 1
+            elif event.key == pygame.K_2:
+                settings.selected_tool = 2
+            elif event.key == pygame.K_3:
+                settings.selected_tool = 3
+            elif event.key == pygame.K_4:
+                settings.selected_tool = 4
+            elif event.key == pygame.K_5:
+                settings.selected_tool = 5
+            elif event.key == pygame.K_6:
+                settings.selected_tool = 6
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = True
+            elif event.button == 1 and settings.selected_tool == 2:
+                settings.drawing_ant = True
+            elif event.button == 1 and settings.selected_tool == 3:
+                settings.drawing_magnet = True
+            elif event.button == 1 and settings.selected_tool == 4:
+                settings.drawing_wall = True
+            elif event.button == 1 and settings.selected_tool == 5:
+                settings.drawing_floor = True
+            elif event.button == 1 and settings.selected_tool == 6:
+                settings.drawing_enemy = True
         elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
+            if event.button == 1 and settings.selected_tool == 1:
                 settings.drawing_food = False
+            elif event.button == 1 and settings.selected_tool == 2:
+                settings.drawing_ant = False
+            elif event.button == 1 and settings.selected_tool == 3:
+                settings.drawing_magnet = False
+            elif event.button == 1 and settings.selected_tool == 4:
+                settings.drawing_wall = False
+            elif event.button == 1 and settings.selected_tool == 5:
+                settings.drawing_floor = False
+            elif event.button == 1 and settings.selected_tool == 6:
+                settings.drawing_enemy = False
         elif event.type == pygame.MOUSEMOTION:
             if settings.drawing_food:
-                x, y = event.pos
-                grid_x = (x + settings.camera_x) // 10
-                grid_y = (y + settings.camera_y) // 10
-                if not threshold_slider.is_hovered or not seed_button.is_hovered or not speed_slider.is_hovered or not ant_slider.is_hovered or not start_button.is_hovered:
-                    try:
-                        if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= 0:
-                            settings.food_locations.add((grid_x, grid_y))
-                            settings.total_food += 1
-                    except IndexError:
-                        print("Invalid grid position")
-                else:
-                    settings.drawing_food = False
+                food2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_ant:
+                ant2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_magnet:
+                magnet.draw(event.pos)
+            elif settings.drawing_wall:
+                wall.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_floor:
+                floor.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+            elif settings.drawing_enemy:
+                enemy.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
         elif event.type == pygame.MOUSEWHEEL:
             new_camera_y = settings.camera_y - (event.y * 20)
 
@@ -167,7 +186,7 @@ while settings.running:
             settings.food_locations = set()
             regenerate_perlin_map()
 
-        ant_slider.handle_event(event)
+        settings.ant_slider.handle_event(event)
         soldier_slider.handle_event(event)
         queen_slider.handle_event(event)
         speed_slider.handle_event(event)
@@ -176,10 +195,11 @@ while settings.running:
             settings.ui_visible = False
             settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                         settings.pheromone_map, speed_slider.value)
-                             for _ in range(int(ant_slider.value))]
-            settings.soldiers = [soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                                 settings.pheromone_map, speed_slider.value)
-                                 for _ in range(int(soldier_slider.value))]
+                             for _ in range(int(settings.ant_slider.value))]
+            settings.soldiers = [
+                soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                settings.pheromone_map, speed_slider.value)
+                for _ in range(int(soldier_slider.value))]
             settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
                                           settings.pheromone_map, speed_slider.value)
                               for _ in range(1)]
@@ -199,6 +219,8 @@ while settings.running:
                 Soldier.move()
             for Queen in settings.queen:
                 Queen.move()
+        for Enemy in settings.enemies:
+            Enemy.move()
         settings.pheromone_map *= 0.99
 
     for x in range(settings.MAP_WIDTH):
@@ -237,15 +259,19 @@ while settings.running:
     for ant in settings.ants:
         ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 3)
+                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 4)
     for soldier in settings.soldiers:
         ant_color = pygame.Color(settings.SOLDIER_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 4)
+                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
     for queen in settings.queen:
         ant_color = pygame.Color(settings.QUEEN_COLOR)
         pygame.draw.circle(screen, ant_color,
-                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 6)
+                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 10)
+    for soldier in settings.enemies:
+        ant_color = pygame.Color(settings.ENEMY_COLOR)
+        pygame.draw.circle(screen, ant_color,
+                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
 
     screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - +settings.camera_x, -50 - settings.camera_y))
 
@@ -254,18 +280,32 @@ while settings.running:
 
     text_threshold = render_text_with_border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
     text_seed = render_text_with_border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
+    text_selected_tool = render_text_with_border(f"Tool: None", (255, 255, 255))
+    if settings.selected_tool == 1:
+        text_selected_tool = render_text_with_border(f"Tool: Food", (255, 255, 255))
+    elif settings.selected_tool == 2:
+        text_selected_tool = render_text_with_border(f"Tool: Ants", (255, 255, 255))
+    elif settings.selected_tool == 3:
+        text_selected_tool = render_text_with_border(f"Tool: Magnet", (255, 255, 255))
+    elif settings.selected_tool == 4:
+        text_selected_tool = render_text_with_border(f"Tool: Wall", (255, 255, 255))
+    elif settings.selected_tool == 5:
+        text_selected_tool = render_text_with_border(f"Tool: Floor", (255, 255, 255))
+    elif settings.selected_tool == 6:
+        text_selected_tool = render_text_with_border(f"Tool: Enemy", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
+    screen.blit(text_selected_tool, (10, settings.MONITOR_HEIGHT - 30))
 
     if settings.ui_visible:
-        ant_slider.draw(screen)
+        settings.ant_slider.draw(screen)
         soldier_slider.draw(screen)
         queen_slider.draw(screen)
         speed_slider.draw(screen)
         start_button.draw(screen)
 
-        text_ants = render_text_with_border(f"Workers: {int(ant_slider.value)}", (255, 255, 255))
+        text_ants = render_text_with_border(f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255))
         text_soldiers = render_text_with_border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
         if queen_slider.value >= 0.5:
             text_queen = render_text_with_border("Enable Queen: Yes", (255, 255, 255))
