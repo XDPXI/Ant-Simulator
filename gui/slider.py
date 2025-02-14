@@ -21,13 +21,16 @@ class Slider:
         self.rect = pygame.Rect(x, y, width, SLIDER_HEIGHT)
         self.min_value = min_value
         self.max_value = max_value
-        self.value = max(min_value, min(max_value, initial_value))
+        self.value = self._clamp_value(initial_value)
 
         self.handle_rect = self._calculate_handle_rect()
         self.dragging = False
         self.is_hovered = False
 
-        logging.info(f"Slider initialized at ({x}, {y}) with value {self.value}")
+        logging.info(f"Slider initialized at ({x}, {y}) with value {self.value:.2f}")
+
+    def _clamp_value(self, value: float) -> float:
+        return max(self.min_value, min(self.max_value, value))
 
     def _calculate_handle_rect(self) -> pygame.Rect:
         handle_x = self.rect.x + (self.value - self.min_value) / (self.max_value - self.min_value) * self.rect.width
@@ -39,17 +42,15 @@ class Slider:
         pygame.draw.rect(surface, COLORS['handle'], self.handle_rect)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.handle_rect.collidepoint(event.pos):
-                self.dragging = True
-                settings.drawing_food = False
-                logging.info(f"Slider drag started.")
-                return True
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if self.dragging:
-                self.dragging = False
-                logging.info(f"Slider value set to {self.value:.2f}")
-                return True
+        if event.type == pygame.MOUSEBUTTONDOWN and self.handle_rect.collidepoint(event.pos):
+            self.dragging = True
+            settings.drawing_food = False
+            logging.info(f"Slider drag started.")
+            return True
+        elif event.type == pygame.MOUSEBUTTONUP and self.dragging:
+            self.dragging = False
+            logging.info(f"Slider value set to {self.value:.2f}")
+            return True
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             self.is_hovered = self.rect.collidepoint(event.pos)
             self._update_value(event.pos[0])
@@ -65,7 +66,7 @@ class Slider:
         return self.value
 
     def set_value(self, value: float):
-        self.value = max(self.min_value, min(self.max_value, value))
+        self.value = self._clamp_value(value)
         self.handle_rect = self._calculate_handle_rect()
 
     def get_dimensions(self) -> Tuple[int, int, int, int]:

@@ -1,46 +1,18 @@
 import os
-
-file_path = 'args\\no-install-required-packages.'
-if not os.path.exists(file_path):
-    os.system("pip install --upgrade pip")
-    os.system("pip install -r requirements.txt")
-
 import platform
 import random
 import sys
 
 import pygame
 import screeninfo
-import argparse
 
-from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
-from entities import worker, queen, soldier, enemy_soldier
-from core import perlin, update_checker, logging
 import settings
+from core import perlin, logging
+from entities import worker, queen, soldier
 from gui import slider, button, progress_bar
+from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
 
 logging.setup("INFO")
-
-parser = argparse.ArgumentParser(description="A 2D pixelated game where ants forage for survival in a simulated world.")
-parser.add_argument("--no-install", choices=["true", "false"],
-                    help="Disables the automatic installation of required packages.")
-args = parser.parse_args()
-
-no_install = args.no_install.lower() == "true" if args.no_install else False
-if no_install:
-    logging.info("Automatic installation is disabled.")
-    logging.warn(
-        "Please install the required packages manually using the provided requirements.txt file or issues will occur!")
-    directory = "args"
-    os.makedirs(directory, exist_ok=True)
-    with open(file_path, 'w') as file:
-        file.write("")
-else:
-    logging.info("Automatic installation is enabled.")
-    if os.path.exists(file_path):
-        os.remove(file_path)
-
-update_checker.check_updates()
 
 pygame.init()
 
@@ -59,15 +31,56 @@ icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
 logging.info("Window and icon initialized.")
 
-threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
-seed_button = button.Button(10, 50, 300, 30, "Generate New Map", 28)
+
 seed_button_value = perlin.perlin_settings.seed
+
+
+def generate_map():
+    global seed_button_value
+    seed_button_value = random.randint(-2147483647, 2147483647)
+    settings.food_locations = set()
+    regenerate_perlin_map()
+
+
+def start():
+    settings.ui_visible = False
+    settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                settings.pheromone_map, speed_slider.value)
+                     for _ in range(int(settings.ant_slider.value))]
+    settings.soldiers = [
+        soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                        settings.pheromone_map, speed_slider.value)
+        for _ in range(int(soldier_slider.value))]
+    settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
+                                  settings.pheromone_map, speed_slider.value)
+                      for _ in range(1)]
+    settings.total_food = len(settings.food_locations)
+    settings.collected_food = 0
+
+
+threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
 soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
 food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
                                             label="Food")
 speed_slider = slider.Slider(10, 220, 300, 0.0, 10.0, 0.5)
-start_button = button.Button(10, 260, 300, 50, "Start", 40)
+
+seed_button = button.Button(
+    x=10, y=50, width=300, height=30,
+    text="Generate New Map",
+    font_size=28,
+    color=(0, 128, 255),
+    text_color=(255, 255, 255),
+    on_click=generate_map
+)
+start_button = button.Button(
+    x=10, y=260, width=300, height=50,
+    text="Start",
+    font_size=40,
+    color=(0, 128, 255),
+    text_color=(255, 255, 255),
+    on_click=start
+)
 
 sun_image = pygame.image.load("assets/sun.png").convert_alpha()
 sun_image = pygame.transform.scale(sun_image, (300, 300))
@@ -181,30 +194,12 @@ while settings.running:
         if threshold_slider.handle_event(event):
             regenerate_perlin_map()
 
-        if seed_button.handle_event(event):
-            seed_button_value = random.randint(-2147483647, 2147483647)
-            settings.food_locations = set()
-            regenerate_perlin_map()
-
         settings.ant_slider.handle_event(event)
         soldier_slider.handle_event(event)
         queen_slider.handle_event(event)
         speed_slider.handle_event(event)
-
-        if start_button.handle_event(event) and settings.button_type:
-            settings.ui_visible = False
-            settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                        settings.pheromone_map, speed_slider.value)
-                             for _ in range(int(settings.ant_slider.value))]
-            settings.soldiers = [
-                soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                settings.pheromone_map, speed_slider.value)
-                for _ in range(int(soldier_slider.value))]
-            settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                          settings.pheromone_map, speed_slider.value)
-                              for _ in range(1)]
-            settings.total_food = len(settings.food_locations)
-            settings.collected_food = 0
+        seed_button.handle_event(event)
+        start_button.handle_event(event)
     if not settings.ui_visible:
         for Ant in settings.ants:
             if Ant.has_food:
