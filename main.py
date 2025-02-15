@@ -155,7 +155,7 @@ while settings.running:
             elif event.key == pygame.K_SPACE:
                 settings.paused = not settings.paused
                 logging.info("Pause event received.")
-            elif pygame.K_1 <= event.key <= pygame.K_6:
+            elif pygame.K_1 <= event.key <= pygame.K_7:
                 settings.selected_tool = event.key - pygame.K_0
 
         elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
