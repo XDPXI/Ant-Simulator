@@ -4,14 +4,14 @@ import settings
 from core import logging
 
 
-def draw(event_pos):
+def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
     mouse_x, mouse_y = event_pos
     radius = 10 * settings.GRID_SIZE
 
     entities = [
         ('ant', settings.ants),
         ('soldier', settings.soldiers),
-        ('queen', [settings.queen]),
+        ('queen', settings.queen),
         ('enemy', settings.enemies)
     ]
 

@@ -1,7 +1,9 @@
+---
+
 <h1 align="center">Ant Simulator</h1>
 
 <p align="center">
-  <em>A fun simulation of ant behavior in a dynamic environment</em>
+  <em>A 2D pixelated game where ants forage for survival in a simulated world. </em>
 </p>
 
 ---
@@ -43,3 +45,5 @@ Navigate to the extracted directory and run the main program by executing:
 ```bash
 python main.py
 ```
+
+---

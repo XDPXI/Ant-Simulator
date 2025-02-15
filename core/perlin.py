@@ -29,3 +29,24 @@ class PerlinNoiseSettings:
 
 
 perlin_settings = PerlinNoiseSettings()
+
+
+def regenerate(seed_button_value, threshold_slider):
+    new_threshold = threshold_slider.value
+    new_seed = int(seed_button_value)
+
+    if perlin_settings.threshold != new_threshold or perlin_settings.seed != new_seed:
+        perlin_settings.threshold = new_threshold
+        perlin_settings.seed = new_seed
+        perlin_settings.noise_generator = PerlinNoise(octaves=1, seed=new_seed)
+        perlin_settings.map_data = perlin_settings.generate_map()
+
+        if not settings.ui_visible:
+            nest_x, nest_y = settings.nest_location
+
+            for entity_group in (settings.ants, settings.soldiers, settings.queen):
+                for entity in entity_group:
+                    entity.x, entity.y = nest_x, nest_y
+
+            for enemy in settings.enemies:
+                enemy.x, enemy.y = settings.MONITOR_WIDTH // 2, settings.MONITOR_HEIGHT // 2

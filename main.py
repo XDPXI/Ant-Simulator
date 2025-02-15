@@ -4,12 +4,10 @@ import random
 import sys
 
 import pygame
-import screeninfo
 
 import settings
 from core import perlin, logging
 from entities import worker, queen, soldier
-from gui import slider, button, progress_bar
 from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
 
 logging.setup("INFO")
@@ -27,6 +25,8 @@ if platform.system() == "Windows":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
+from gui import slider, button, progress_bar, text
+
 icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
 logging.info("Window and icon initialized.")
@@ -39,7 +39,7 @@ def generate_map():
     global seed_button_value
     seed_button_value = random.randint(-2147483647, 2147483647)
     settings.food_locations = set()
-    regenerate_perlin_map()
+    perlin.regenerate(seed_button_value, threshold_slider)
 
 
 def start():
@@ -89,110 +89,56 @@ ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
 ant_nest = pygame.transform.scale(ant_nest, (100, 50))
 
 
-def regenerate_perlin_map():
-    if perlin.perlin_settings.threshold != threshold_slider.value or perlin.perlin_settings.seed != int(
-            seed_button_value):
-        perlin.perlin_settings.threshold = threshold_slider.value
-        perlin.perlin_settings.seed = int(seed_button_value)
-        perlin.perlin_settings.noise_generator = perlin.PerlinNoise(octaves=1, seed=perlin.perlin_settings.seed)
-        perlin.perlin_settings.map_data = perlin.perlin_settings.generate_map()
-        if not settings.ui_visible:
-            for ANT in settings.ants:
-                ANT.x = settings.nest_location[0]
-                ANT.y = settings.nest_location[1]
-            for SOLDIER in settings.soldiers:
-                SOLDIER.x = settings.nest_location[0]
-                SOLDIER.y = settings.nest_location[1]
-            for QUEEN in settings.queen:
-                QUEEN.x = settings.nest_location[0]
-                QUEEN.y = settings.nest_location[1]
-            for ENEMY in settings.enemies:
-                ENEMY.x = settings.MONITOR_WIDTH // 2
-                ENEMY.y = settings.MONITOR_HEIGHT // 2
-
-
 logging.info("Game loop started.")
 while settings.running:
     screen.fill("#87CEEB")
     pygame.draw.rect(screen, settings.BG_COLOR,
                      (0 - settings.camera_x, 0 - settings.camera_y, settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT))
 
-    settings.MONITOR_WIDTH = screeninfo.get_monitors()[0].width
-    settings.MONITOR_HEIGHT = screeninfo.get_monitors()[0].height
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             settings.running = False
             logging.info("Quit event received.")
+
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 sys.exit(1)
             elif event.key == pygame.K_SPACE:
                 settings.paused = not settings.paused
                 logging.info("Pause event received.")
-            elif event.key == pygame.K_1:
-                settings.selected_tool = 1
-            elif event.key == pygame.K_2:
-                settings.selected_tool = 2
-            elif event.key == pygame.K_3:
-                settings.selected_tool = 3
-            elif event.key == pygame.K_4:
-                settings.selected_tool = 4
-            elif event.key == pygame.K_5:
-                settings.selected_tool = 5
-            elif event.key == pygame.K_6:
-                settings.selected_tool = 6
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1 and settings.selected_tool == 1:
-                settings.drawing_food = True
-            elif event.button == 1 and settings.selected_tool == 2:
-                settings.drawing_ant = True
-            elif event.button == 1 and settings.selected_tool == 3:
-                settings.drawing_magnet = True
-            elif event.button == 1 and settings.selected_tool == 4:
-                settings.drawing_wall = True
-            elif event.button == 1 and settings.selected_tool == 5:
-                settings.drawing_floor = True
-            elif event.button == 1 and settings.selected_tool == 6:
-                settings.drawing_enemy = True
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1 and settings.selected_tool == 1:
-                settings.drawing_food = False
-            elif event.button == 1 and settings.selected_tool == 2:
-                settings.drawing_ant = False
-            elif event.button == 1 and settings.selected_tool == 3:
-                settings.drawing_magnet = False
-            elif event.button == 1 and settings.selected_tool == 4:
-                settings.drawing_wall = False
-            elif event.button == 1 and settings.selected_tool == 5:
-                settings.drawing_floor = False
-            elif event.button == 1 and settings.selected_tool == 6:
-                settings.drawing_enemy = False
-        elif event.type == pygame.MOUSEMOTION:
-            if settings.drawing_food:
-                food2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
-            elif settings.drawing_ant:
-                ant2.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
-            elif settings.drawing_magnet:
-                magnet.draw(event.pos)
-            elif settings.drawing_wall:
-                wall.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
-            elif settings.drawing_floor:
-                floor.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
-            elif settings.drawing_enemy:
-                enemy.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
-        elif event.type == pygame.MOUSEWHEEL:
-            new_camera_y = settings.camera_y - (event.y * 20)
+            elif pygame.K_1 <= event.key <= pygame.K_6:
+                settings.selected_tool = event.key - pygame.K_0
 
-            if new_camera_y > 0:
-                settings.camera_y = 0
-            elif new_camera_y < -960:
-                settings.camera_y = -960
-            else:
-                settings.camera_y = new_camera_y
+        elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+            tool_actions = {
+                1: "drawing_food",
+                2: "drawing_ant",
+                3: "drawing_magnet",
+                4: "drawing_wall",
+                5: "drawing_floor",
+                6: "drawing_enemy"
+            }
+            if event.button == 1 and settings.selected_tool in tool_actions:
+                setattr(settings, tool_actions[settings.selected_tool], event.type == pygame.MOUSEBUTTONDOWN)
+
+        elif event.type == pygame.MOUSEMOTION:
+            drawing_tools = {
+                "drawing_food": food2,
+                "drawing_ant": ant2,
+                "drawing_magnet": magnet,
+                "drawing_wall": wall,
+                "drawing_floor": floor,
+                "drawing_enemy": enemy
+            }
+            for tool, obj in drawing_tools.items():
+                if getattr(settings, tool, False):
+                    obj.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+
+        elif event.type == pygame.MOUSEWHEEL:
+            settings.camera_y = max(-960, min(0, settings.camera_y - (event.y * 20)))
 
         if threshold_slider.handle_event(event):
-            regenerate_perlin_map()
+            perlin.regenerate(seed_button_value, threshold_slider)
 
         settings.ant_slider.handle_event(event)
         soldier_slider.handle_event(event)
@@ -200,6 +146,7 @@ while settings.running:
         speed_slider.handle_event(event)
         seed_button.handle_event(event)
         start_button.handle_event(event)
+
     if not settings.ui_visible:
         for Ant in settings.ants:
             if Ant.has_food:
@@ -209,13 +156,16 @@ while settings.running:
                 Ant.move()
                 if Ant.find_food(settings.food_locations):
                     Ant.leave_pheromone()
+
         if queen_slider.value >= 0.5:
             for Soldier in settings.soldiers:
                 Soldier.move()
             for Queen in settings.queen:
                 Queen.move()
+
         for Enemy in settings.enemies:
             Enemy.move()
+
         settings.pheromone_map *= 0.99
 
     for x in range(settings.MAP_WIDTH):
@@ -238,56 +188,44 @@ while settings.running:
 
     screen.blit(pheromone_surface, (-settings.camera_x, -settings.camera_y))
 
-
-    def render_text_with_border(text, color, border_color=(0, 0, 0), border_size=2):
-        text_surface = font.render(text, True, color)
-        border_surface = pygame.Surface(text_surface.get_size(), pygame.SRCALPHA)
-        for dx, dy in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-            border_surface.blit(font.render(text, True, border_color), (dx * border_size, dy * border_size))
-        border_surface.blit(text_surface, (0, 0))
-        return border_surface
-
-
-    screen.blit(sun_image, ((settings.MONITOR_WIDTH - 400) - +settings.camera_x, -900 - settings.camera_y))
+    screen.blit(sun_image, ((settings.MONITOR_WIDTH - 400) - settings.camera_x, -900 - settings.camera_y))
     pygame.draw.rect(screen, "#4F7942", (0 - settings.camera_x, -50 - settings.camera_y, settings.MONITOR_WIDTH, 50))
 
-    for ant in settings.ants:
-        ant_color = pygame.Color(settings.FOOD_COLOR) if ant.has_food else pygame.Color(settings.ANT_COLOR)
-        pygame.draw.circle(screen, ant_color,
-                           (int(ant.x * 10) - settings.camera_x, int(ant.y * 10) - settings.camera_y), 4)
-    for soldier in settings.soldiers:
-        ant_color = pygame.Color(settings.SOLDIER_COLOR)
-        pygame.draw.circle(screen, ant_color,
-                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
-    for queen in settings.queen:
-        ant_color = pygame.Color(settings.QUEEN_COLOR)
-        pygame.draw.circle(screen, ant_color,
-                           (int(queen.x * 10) - settings.camera_x, int(queen.y * 10) - settings.camera_y), 10)
-    for soldier in settings.enemies:
-        ant_color = pygame.Color(settings.ENEMY_COLOR)
-        pygame.draw.circle(screen, ant_color,
-                           (int(soldier.x * 10) - settings.camera_x, int(soldier.y * 10) - settings.camera_y), 6)
+    entity_groups = (
+        (settings.ants, lambda ant: settings.FOOD_COLOR if ant.has_food else settings.ANT_COLOR, 4),
+        (settings.soldiers, lambda _: settings.SOLDIER_COLOR, 6),
+        (settings.queen, lambda _: settings.QUEEN_COLOR, 10),
+        (settings.enemies, lambda _: settings.ENEMY_COLOR, 6)
+    )
 
-    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - +settings.camera_x, -50 - settings.camera_y))
+    for entity_list, color_func, size in entity_groups:
+        for entity in entity_list:
+            entity_color = pygame.Color(color_func(entity))
+            pygame.draw.circle(
+                screen,
+                entity_color,
+                (int(entity.x * 10) - settings.camera_x, int(entity.y * 10) - settings.camera_y),
+                size
+            )
+
+    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - settings.camera_x, -50 - settings.camera_y))
 
     threshold_slider.draw(screen)
     seed_button.draw(screen)
 
-    text_threshold = render_text_with_border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
-    text_seed = render_text_with_border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
-    text_selected_tool = render_text_with_border(f"Tool: None", (255, 255, 255))
-    if settings.selected_tool == 1:
-        text_selected_tool = render_text_with_border(f"Tool: Food", (255, 255, 255))
-    elif settings.selected_tool == 2:
-        text_selected_tool = render_text_with_border(f"Tool: Ants", (255, 255, 255))
-    elif settings.selected_tool == 3:
-        text_selected_tool = render_text_with_border(f"Tool: Magnet", (255, 255, 255))
-    elif settings.selected_tool == 4:
-        text_selected_tool = render_text_with_border(f"Tool: Wall", (255, 255, 255))
-    elif settings.selected_tool == 5:
-        text_selected_tool = render_text_with_border(f"Tool: Floor", (255, 255, 255))
-    elif settings.selected_tool == 6:
-        text_selected_tool = render_text_with_border(f"Tool: Enemy", (255, 255, 255))
+    text_threshold = text.border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
+    text_seed = text.border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
+
+    tool_names = {
+        1: "Food",
+        2: "Ants",
+        3: "Magnet",
+        4: "Wall",
+        5: "Floor",
+        6: "Enemy"
+    }
+    selected_tool_name = tool_names.get(settings.selected_tool, "None")
+    text_selected_tool = text.border(f"Tool: {selected_tool_name}", (255, 255, 255))
 
     screen.blit(text_threshold, (320, 9))
     screen.blit(text_seed, (320, 54))
@@ -300,13 +238,10 @@ while settings.running:
         speed_slider.draw(screen)
         start_button.draw(screen)
 
-        text_ants = render_text_with_border(f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255))
-        text_soldiers = render_text_with_border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
-        if queen_slider.value >= 0.5:
-            text_queen = render_text_with_border("Enable Queen: Yes", (255, 255, 255))
-        else:
-            text_queen = render_text_with_border("Enable Queen: No", (255, 255, 255))
-        text_speed = render_text_with_border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
+        text_ants = text.border(f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255))
+        text_soldiers = text.border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
+        text_queen = text.border(f"Enable Queen: {'Yes' if queen_slider.value >= 0.5 else 'No'}", (255, 255, 255))
+        text_speed = text.border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
 
         screen.blit(text_ants, (320, 99))
         screen.blit(text_soldiers, (320, 139))
@@ -314,19 +249,14 @@ while settings.running:
         screen.blit(text_speed, (320, 219))
     else:
         food_progressbar.draw(screen)
-
         food_progressbar.set_value(settings.collected_food)
         food_progressbar.max_value = settings.total_food
 
-        text_food = render_text_with_border(f"Food Collected: {settings.collected_food}/{settings.total_food}",
-                                            (255, 255, 255))
-
+        text_food = text.border(f"Food Collected: {settings.collected_food}/{settings.total_food}", (255, 255, 255))
         screen.blit(text_food, (320, 99))
 
-        if settings.food_locations is None or len(
-                settings.food_locations) == 0 or settings.collected_food == settings.total_food and settings.old_total_food < settings.total_food:
+        if not settings.food_locations or settings.collected_food == settings.total_food:
             settings.total_food = settings.collected_food
-            old_total_food = settings.total_food
 
     pygame.display.flip()
     settings.clock.tick(settings.FPS)
