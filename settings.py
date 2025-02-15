@@ -64,7 +64,3 @@ selected_tool = 1
 total_food = 0
 old_total_food = 0
 collected_food = 0
-
-# Version
-with open("version.txt") as f:
-    version = f.read()
