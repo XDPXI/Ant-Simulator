@@ -58,3 +58,15 @@ class Soldier:
                 break
         else:
             pass
+    
+    def find_ant(self):
+        try:
+            entities = [
+                ('enemy', settings.enemies)
+            ]
+            for name, entity_list in entities:
+                for entity in entity_list.copy():
+                    if math.hypot(self.x - entity.x, self.y - entity.y) < 1:
+                        entity_list.remove(entity)
+        except Exception as e:
+            logging.error("Error while finding enemies: " + str(e))

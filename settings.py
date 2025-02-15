@@ -38,6 +38,7 @@ ants = []
 soldiers = []
 queen = []
 enemies = []
+enemies_found = False
 pheromone_map = np.zeros((MAP_WIDTH, MAP_HEIGHT))
 
 # UI
@@ -56,6 +57,7 @@ drawing_magnet = False
 drawing_wall = False
 drawing_floor = False
 drawing_enemy = False
+drawing_soldier = False
 selected_tool = 1
 
 # Food

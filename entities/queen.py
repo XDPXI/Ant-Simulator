@@ -27,7 +27,10 @@ class Queen:
 
     def stay_within_range(self):
         nest_x, nest_y = settings.nest_location[0], settings.nest_location[1]
-        radius = 30
+        if settings.enemies_found:
+            radius = 10
+        else:
+            radius = 30
 
         dx = self.x - nest_x
         dy = self.y - nest_y

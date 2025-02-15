@@ -25,7 +25,7 @@ class EnemySoldier:
                 ('soldier', settings.soldiers),
                 ('queen', settings.queen)
             ]
-            for entity_list in entities:
+            for name, entity_list in entities:
                 for entity in entity_list.copy():
                     dx = entity.x - self.x
                     dy = entity.y - self.y
@@ -37,8 +37,8 @@ class EnemySoldier:
                             if not self.check_line_of_sight(entity):
                                 return entity
                     return None
-        except AttributeError:
-            logging.error("Error while checking ants in vision: No ants in sight.")
+        except AttributeError as e:
+            logging.error("Error while checking ants in vision: " + str(e))
             return None
         
 
@@ -46,7 +46,7 @@ class EnemySoldier:
         dx = target.x - self.x
         dy = target.y - self.y
         distance = math.hypot(dx, dy)
-        steps = int(distance * 2)
+        steps = int(distance * 10)
         for i in range(1, steps):
             x = self.x + dx * i / steps
             y = self.y + dy * i / steps
@@ -92,3 +92,17 @@ class EnemySoldier:
                 break
         else:
             pass
+    
+    def find_ant(self):
+        try:
+            entities = [
+                ('ant', settings.ants),
+                ('soldier', settings.soldiers),
+                ('queen', settings.queen)
+            ]
+            for name, entity_list in entities:
+                for entity in entity_list.copy():
+                    if math.hypot(self.x - entity.x, self.y - entity.y) < 1:
+                        entity_list.remove(entity)
+        except Exception as e:
+            logging.error("Error while finding ants: " + str(e))

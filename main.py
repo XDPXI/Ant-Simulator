@@ -8,7 +8,7 @@ import pygame
 import settings
 from core import perlin, logging
 from entities import worker, queen, soldier
-from tools import ant as ant2, food as food2, magnet, wall, floor, enemy
+from tools import ant as ant2, food as food2, magnet, wall, floor, enemy, soldier as soldier2
 
 logging.setup("INFO")
 
@@ -59,7 +59,7 @@ def start():
 
 
 threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
-soldier_slider = slider.Slider(10, 140, 300, 0, 10, 10)
+soldier_slider = slider.Slider(10, 140, 300, 0, 25, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
 food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
                                             label="Food")
@@ -113,10 +113,11 @@ while settings.running:
             tool_actions = {
                 1: "drawing_food",
                 2: "drawing_ant",
-                3: "drawing_magnet",
-                4: "drawing_wall",
-                5: "drawing_floor",
-                6: "drawing_enemy"
+                3: "drawing_soldier",
+                4: "drawing_enemy",
+                5: "drawing_magnet",
+                6: "drawing_wall",
+                7: "drawing_floor"
             }
             if event.button == 1 and settings.selected_tool in tool_actions:
                 setattr(settings, tool_actions[settings.selected_tool], event.type == pygame.MOUSEBUTTONDOWN)
@@ -128,7 +129,8 @@ while settings.running:
                 "drawing_magnet": magnet,
                 "drawing_wall": wall,
                 "drawing_floor": floor,
-                "drawing_enemy": enemy
+                "drawing_enemy": enemy,
+                "drawing_soldier": soldier2
             }
             for tool, obj in drawing_tools.items():
                 if getattr(settings, tool, False):
@@ -160,11 +162,13 @@ while settings.running:
         if queen_slider.value >= 0.5:
             for Soldier in settings.soldiers:
                 Soldier.move()
+                Soldier.find_ant()
             for Queen in settings.queen:
                 Queen.move()
 
         for Enemy in settings.enemies:
             Enemy.move()
+            Enemy.find_ant()
 
         settings.pheromone_map *= 0.99
 
@@ -218,11 +222,12 @@ while settings.running:
 
     tool_names = {
         1: "Food",
-        2: "Ants",
-        3: "Magnet",
-        4: "Wall",
-        5: "Floor",
-        6: "Enemy"
+        2: "Workers",
+        3: "Soldiers",
+        4: "Enemy",
+        5: "Magnet",
+        6: "Wall",
+        7: "Floor"
     }
     selected_tool_name = tool_names.get(settings.selected_tool, "None")
     text_selected_tool = text.border(f"Tool: {selected_tool_name}", (255, 255, 255))
