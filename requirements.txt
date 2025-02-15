@@ -4,4 +4,3 @@ screeninfo
 perlin-noise
 colorama
 flake8
-black
