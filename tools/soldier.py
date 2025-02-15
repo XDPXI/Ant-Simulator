@@ -11,15 +11,31 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
     grid_x = (mouse_x + settings.camera_x) // settings.GRID_SIZE
     grid_y = (mouse_y + settings.camera_y) // settings.GRID_SIZE
 
-    if any(widget.is_hovered for widget in
-           (threshold_slider, seed_button, speed_slider, settings.ant_slider, start_button)):
+    if any(
+            widget.is_hovered
+            for widget in (
+                    threshold_slider,
+                    seed_button,
+                    speed_slider,
+                    settings.ant_slider,
+                    start_button,
+            )
+    ):
         settings.drawing_soldier = False
         return
 
     try:
         if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= -4:
-            settings.soldiers.append(soldier.Soldier(grid_x, grid_y, settings.nest_location,
-                                            settings.pheromone_map, speed_slider.value))
+            settings.soldiers.append(
+                soldier.Soldier(
+                    grid_x,
+                    grid_y,
+                    settings.nest_location,
+                    settings.pheromone_map,
+                    speed_slider.value,
+                )
+            )
     except IndexError:
         logging.error(
-            f"Invalid grid position: ({grid_x}, {grid_y}) | Camera: ({settings.camera_x}, {settings.camera_y})")
+            f"Invalid grid position: ({grid_x}, {grid_y}) | Camera: ({settings.camera_x}, {settings.camera_y})"
+        )

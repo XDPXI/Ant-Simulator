@@ -21,9 +21,9 @@ class EnemySoldier:
     def check_ants_in_vision(self):
         try:
             entities = [
-                ('ant', settings.ants),
-                ('soldier', settings.soldiers),
-                ('queen', settings.queen)
+                ("ant", settings.ants),
+                ("soldier", settings.soldiers),
+                ("queen", settings.queen),
             ]
             for name, entity_list in entities:
                 for entity in entity_list.copy():
@@ -32,7 +32,9 @@ class EnemySoldier:
                     distance = math.hypot(dx, dy)
                     if distance <= self.vision_range:
                         angle = math.atan2(dy, dx)
-                        angle_diff = (angle - self.angle + math.pi) % (2 * math.pi) - math.pi
+                        angle_diff = (angle - self.angle + math.pi) % (
+                                2 * math.pi
+                        ) - math.pi
                         if abs(angle_diff) <= self.vision_angle / 2:
                             if not self.check_line_of_sight(entity):
                                 return entity
@@ -40,7 +42,6 @@ class EnemySoldier:
         except AttributeError as e:
             logging.error("Error while checking ants in vision: " + str(e))
             return None
-        
 
     def check_line_of_sight(self, target):
         dx = target.x - self.x
@@ -92,13 +93,13 @@ class EnemySoldier:
                 break
         else:
             pass
-    
+
     def find_ant(self):
         try:
             entities = [
-                ('ant', settings.ants),
-                ('soldier', settings.soldiers),
-                ('queen', settings.queen)
+                ("ant", settings.ants),
+                ("soldier", settings.soldiers),
+                ("queen", settings.queen),
             ]
             for name, entity_list in entities:
                 for entity in entity_list.copy():

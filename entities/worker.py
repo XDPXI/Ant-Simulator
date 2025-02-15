@@ -93,7 +93,16 @@ class Ant:
         strongest_pheromone = 0
         strongest_direction = None
 
-        for dx, dy in [(0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]:
+        for dx, dy in [
+            (0, 1),
+            (1, 1),
+            (1, 0),
+            (1, -1),
+            (0, -1),
+            (-1, -1),
+            (-1, 0),
+            (-1, 1),
+        ]:
             x = int(self.x + dx)
             y = int(self.y + dy)
             if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:

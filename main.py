@@ -8,7 +8,15 @@ import pygame
 import settings
 from core import perlin, logging
 from entities import worker, queen, soldier
-from tools import ant as ant2, food as food2, magnet, wall, floor, enemy, soldier as soldier2
+from tools import (
+    ant as ant2,
+    food as food2,
+    magnet,
+    wall,
+    floor,
+    enemy,
+    soldier as soldier2,
+)
 
 logging.setup("INFO")
 
@@ -18,9 +26,13 @@ logging.info("Pygame initialized.")
 font = pygame.font.Font(None, 36)
 
 pygame.display.set_caption("Ant Simulator")
-screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME)
+screen = pygame.display.set_mode(
+    (settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.NOFRAME
+)
 if platform.system() == "Darwin":
-    screen = pygame.display.set_mode((settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode(
+        (settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT), pygame.FULLSCREEN
+    )
 if platform.system() == "Windows":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
@@ -44,42 +56,71 @@ def generate_map():
 
 def start():
     settings.ui_visible = False
-    settings.ants = [worker.Ant(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                settings.pheromone_map, speed_slider.value)
-                     for _ in range(int(settings.ant_slider.value))]
+    settings.ants = [
+        worker.Ant(
+            settings.nest_location[0],
+            settings.nest_location[1],
+            settings.nest_location,
+            settings.pheromone_map,
+            speed_slider.value,
+        )
+        for _ in range(int(settings.ant_slider.value))
+    ]
     settings.soldiers = [
-        soldier.Soldier(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                        settings.pheromone_map, speed_slider.value)
-        for _ in range(int(soldier_slider.value))]
-    settings.queen = [queen.Queen(settings.nest_location[0], settings.nest_location[1], settings.nest_location,
-                                  settings.pheromone_map, speed_slider.value)
-                      for _ in range(1)]
+        soldier.Soldier(
+            settings.nest_location[0],
+            settings.nest_location[1],
+            settings.nest_location,
+            settings.pheromone_map,
+            speed_slider.value,
+        )
+        for _ in range(int(soldier_slider.value))
+    ]
+    settings.queen = [
+        queen.Queen(
+            settings.nest_location[0],
+            settings.nest_location[1],
+            settings.nest_location,
+            settings.pheromone_map,
+            speed_slider.value,
+        )
+        for _ in range(1)
+    ]
     settings.total_food = len(settings.food_locations)
     settings.collected_food = 0
 
 
-threshold_slider = slider.Slider(10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold)
+threshold_slider = slider.Slider(
+    10, 10, 300, 0.0, 1.0, perlin.perlin_settings.threshold
+)
 soldier_slider = slider.Slider(10, 140, 300, 0, 25, 10)
 queen_slider = slider.Slider(10, 180, 300, 0, 1, 1)
-food_progressbar = progress_bar.ProgressBar(x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0,
-                                            label="Food")
+food_progressbar = progress_bar.ProgressBar(
+    x=10, y=100, width=300, min_value=0, max_value=100, initial_value=0, label="Food"
+)
 speed_slider = slider.Slider(10, 220, 300, 0.0, 10.0, 0.5)
 
 seed_button = button.Button(
-    x=10, y=50, width=300, height=30,
+    x=10,
+    y=50,
+    width=300,
+    height=30,
     text="Generate New Map",
     font_size=28,
     color=(0, 128, 255),
     text_color=(255, 255, 255),
-    on_click=generate_map
+    on_click=generate_map,
 )
 start_button = button.Button(
-    x=10, y=260, width=300, height=50,
+    x=10,
+    y=260,
+    width=300,
+    height=50,
     text="Start",
     font_size=40,
     color=(0, 128, 255),
     text_color=(255, 255, 255),
-    on_click=start
+    on_click=start,
 )
 
 sun_image = pygame.image.load("assets/sun.png").convert_alpha()
@@ -92,8 +133,16 @@ ant_nest = pygame.transform.scale(ant_nest, (100, 50))
 logging.info("Game loop started.")
 while settings.running:
     screen.fill("#87CEEB")
-    pygame.draw.rect(screen, settings.BG_COLOR,
-                     (0 - settings.camera_x, 0 - settings.camera_y, settings.MONITOR_WIDTH, settings.MONITOR_HEIGHT))
+    pygame.draw.rect(
+        screen,
+        settings.BG_COLOR,
+        (
+            0 - settings.camera_x,
+            0 - settings.camera_y,
+            settings.MONITOR_WIDTH,
+            settings.MONITOR_HEIGHT,
+        ),
+    )
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -117,10 +166,14 @@ while settings.running:
                 4: "drawing_enemy",
                 5: "drawing_magnet",
                 6: "drawing_wall",
-                7: "drawing_floor"
+                7: "drawing_floor",
             }
             if event.button == 1 and settings.selected_tool in tool_actions:
-                setattr(settings, tool_actions[settings.selected_tool], event.type == pygame.MOUSEBUTTONDOWN)
+                setattr(
+                    settings,
+                    tool_actions[settings.selected_tool],
+                    event.type == pygame.MOUSEBUTTONDOWN,
+                )
 
         elif event.type == pygame.MOUSEMOTION:
             drawing_tools = {
@@ -130,11 +183,17 @@ while settings.running:
                 "drawing_wall": wall,
                 "drawing_floor": floor,
                 "drawing_enemy": enemy,
-                "drawing_soldier": soldier2
+                "drawing_soldier": soldier2,
             }
             for tool, obj in drawing_tools.items():
                 if getattr(settings, tool, False):
-                    obj.draw(event.pos, threshold_slider, seed_button, speed_slider, start_button)
+                    obj.draw(
+                        event.pos,
+                        threshold_slider,
+                        seed_button,
+                        speed_slider,
+                        start_button,
+                    )
 
         elif event.type == pygame.MOUSEWHEEL:
             settings.camera_y = max(-960, min(0, settings.camera_y - (event.y * 20)))
@@ -175,31 +234,63 @@ while settings.running:
     for x in range(settings.MAP_WIDTH):
         for y in range(settings.MAP_HEIGHT):
             if perlin.perlin_settings.map_data[x, y] == 1:
-                pygame.draw.rect(screen, settings.WALL_COLOR,
-                                 ((x * 10) - settings.camera_x, (y * 10) - settings.camera_y, 10, 10))
+                pygame.draw.rect(
+                    screen,
+                    settings.WALL_COLOR,
+                    (
+                        (x * 10) - settings.camera_x,
+                        (y * 10) - settings.camera_y,
+                        10,
+                        10,
+                    ),
+                )
 
     for food in settings.food_locations:
-        pygame.draw.rect(screen, pygame.Color(settings.FOOD_COLOR),
-                         ((food[0] * 10) - settings.camera_x, (food[1] * 10) - settings.camera_y, 10, 10))
+        pygame.draw.rect(
+            screen,
+            pygame.Color(settings.FOOD_COLOR),
+            (
+                (food[0] * 10) - settings.camera_x,
+                (food[1] * 10) - settings.camera_y,
+                10,
+                10,
+            ),
+        )
 
-    pheromone_surface = pygame.Surface((settings.MAP_WIDTH * 10, settings.MAP_HEIGHT * 10), pygame.SRCALPHA)
+    pheromone_surface = pygame.Surface(
+        (settings.MAP_WIDTH * 10, settings.MAP_HEIGHT * 10), pygame.SRCALPHA
+    )
     for x in range(settings.MAP_WIDTH):
         for y in range(settings.MAP_HEIGHT):
             intensity = int(settings.pheromone_map[x, y] * 255)
             if intensity > 0:
-                pygame.draw.rect(pheromone_surface, (255, 255, 0, intensity),
-                                 ((x * 10), (y * 10), 10, 10))
+                pygame.draw.rect(
+                    pheromone_surface,
+                    (255, 255, 0, intensity),
+                    ((x * 10), (y * 10), 10, 10),
+                )
 
     screen.blit(pheromone_surface, (-settings.camera_x, -settings.camera_y))
 
-    screen.blit(sun_image, ((settings.MONITOR_WIDTH - 400) - settings.camera_x, -900 - settings.camera_y))
-    pygame.draw.rect(screen, "#4F7942", (0 - settings.camera_x, -50 - settings.camera_y, settings.MONITOR_WIDTH, 50))
+    screen.blit(
+        sun_image,
+        ((settings.MONITOR_WIDTH - 400) - settings.camera_x, -900 - settings.camera_y),
+    )
+    pygame.draw.rect(
+        screen,
+        "#4F7942",
+        (0 - settings.camera_x, -50 - settings.camera_y, settings.MONITOR_WIDTH, 50),
+    )
 
     entity_groups = (
-        (settings.ants, lambda ant: settings.FOOD_COLOR if ant.has_food else settings.ANT_COLOR, 4),
+        (
+            settings.ants,
+            lambda ant: settings.FOOD_COLOR if ant.has_food else settings.ANT_COLOR,
+            4,
+        ),
         (settings.soldiers, lambda _: settings.SOLDIER_COLOR, 6),
         (settings.queen, lambda _: settings.QUEEN_COLOR, 10),
-        (settings.enemies, lambda _: settings.ENEMY_COLOR, 6)
+        (settings.enemies, lambda _: settings.ENEMY_COLOR, 6),
     )
 
     for entity_list, color_func, size in entity_groups:
@@ -208,16 +299,27 @@ while settings.running:
             pygame.draw.circle(
                 screen,
                 entity_color,
-                (int(entity.x * 10) - settings.camera_x, int(entity.y * 10) - settings.camera_y),
-                size
+                (
+                    int(entity.x * 10) - settings.camera_x,
+                    int(entity.y * 10) - settings.camera_y,
+                ),
+                size,
             )
 
-    screen.blit(ant_nest, (((settings.MONITOR_WIDTH // 2) - (100 // 2)) - settings.camera_x, -50 - settings.camera_y))
+    screen.blit(
+        ant_nest,
+        (
+            ((settings.MONITOR_WIDTH // 2) - (100 // 2)) - settings.camera_x,
+            -50 - settings.camera_y,
+        ),
+    )
 
     threshold_slider.draw(screen)
     seed_button.draw(screen)
 
-    text_threshold = text.border(f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255))
+    text_threshold = text.border(
+        f"Threshold: {perlin.perlin_settings.threshold:.2f}", (255, 255, 255)
+    )
     text_seed = text.border(f"Seed: {perlin.perlin_settings.seed}", (255, 255, 255))
 
     tool_names = {
@@ -227,7 +329,7 @@ while settings.running:
         4: "Enemy",
         5: "Magnet",
         6: "Wall",
-        7: "Floor"
+        7: "Floor",
     }
     selected_tool_name = tool_names.get(settings.selected_tool, "None")
     text_selected_tool = text.border(f"Tool: {selected_tool_name}", (255, 255, 255))
@@ -243,9 +345,16 @@ while settings.running:
         speed_slider.draw(screen)
         start_button.draw(screen)
 
-        text_ants = text.border(f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255))
-        text_soldiers = text.border(f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255))
-        text_queen = text.border(f"Enable Queen: {'Yes' if queen_slider.value >= 0.5 else 'No'}", (255, 255, 255))
+        text_ants = text.border(
+            f"Workers: {int(settings.ant_slider.value)}", (255, 255, 255)
+        )
+        text_soldiers = text.border(
+            f"Soldiers: {int(soldier_slider.value)}", (255, 255, 255)
+        )
+        text_queen = text.border(
+            f"Enable Queen: {'Yes' if queen_slider.value >= 0.5 else 'No'}",
+            (255, 255, 255),
+        )
         text_speed = text.border(f"Speed: {speed_slider.value:.2f}", (255, 255, 255))
 
         screen.blit(text_ants, (320, 99))
@@ -257,10 +366,16 @@ while settings.running:
         food_progressbar.set_value(settings.collected_food)
         food_progressbar.max_value = settings.total_food
 
-        text_food = text.border(f"Food Collected: {settings.collected_food}/{settings.total_food}", (255, 255, 255))
+        text_food = text.border(
+            f"Food Collected: {settings.collected_food}/{settings.total_food}",
+            (255, 255, 255),
+        )
         screen.blit(text_food, (320, 99))
 
-        if not settings.food_locations or settings.collected_food == settings.total_food:
+        if (
+                not settings.food_locations
+                or settings.collected_food == settings.total_food
+        ):
             settings.total_food = settings.collected_food
 
     pygame.display.flip()

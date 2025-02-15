@@ -6,11 +6,13 @@ import settings
 
 LOG_LEVELS = ["DEBUG", "INFO", "WARN", "ERROR"]
 
+
 def setup(log_level: str):
     init(autoreset=True)
     if log_level not in LOG_LEVELS:
         raise ValueError(f"Invalid log level: {log_level}")
     settings.view_log_level = log_level
+
 
 def get_current_time():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
@@ -30,8 +32,10 @@ def debug(message: str):
 def info(message: str):
     _log_message("INFO", message, Style.RESET_ALL, 1)
 
+
 def warn(message: str):
     _log_message("WARNING", message, Fore.YELLOW, 2)
+
 
 def error(message: str):
     _log_message("ERROR", message, Fore.RED, 3)
