@@ -17,7 +17,7 @@ class Queen:
         self.color = pygame.Color(settings.ANT_COLOR)
         self.angle = random.uniform(0, 2 * math.pi)
         self.speed = speed
-        self.vision_range = 10
+        self.vision_range = 15
         self.vision_angle = math.pi / 3
         logging.debug(f"Soldier spawned at ({self.x}, {self.y})")
 

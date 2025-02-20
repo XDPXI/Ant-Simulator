@@ -373,8 +373,8 @@ while settings.running:
         screen.blit(text_food, (320, 99))
 
         if (
-                not settings.food_locations
-                or settings.collected_food == settings.total_food
+            not settings.food_locations
+            or settings.collected_food == settings.total_food
         ):
             settings.total_food = settings.collected_food
 

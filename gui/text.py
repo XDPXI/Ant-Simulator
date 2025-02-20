@@ -7,7 +7,7 @@ def none(text, color, font=pygame.font.Font(None, 36)):
 
 
 def border(
-        text, color, border_color=(0, 0, 0), border_size=2, font=pygame.font.Font(None, 36)
+    text, color, border_color=(0, 0, 0), border_size=2, font=pygame.font.Font(None, 36)
 ):
     text_surface = font.render(text, True, color)
     border_surface = pygame.Surface(text_surface.get_size(), pygame.SRCALPHA)
