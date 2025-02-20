@@ -4,6 +4,8 @@ from entities import enemy_soldier
 
 
 def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
+    return
+
     if settings.ui_visible:
         return
 

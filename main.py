@@ -6,7 +6,7 @@ import sys
 import pygame
 
 import settings
-from core import perlin, logging
+from core import perlin, logging, map
 from entities import worker, queen, soldier
 from tools import (
     ant as ant2,
@@ -233,7 +233,7 @@ while settings.running:
 
     for x in range(settings.MAP_WIDTH):
         for y in range(settings.MAP_HEIGHT):
-            if perlin.perlin_settings.map_data[x, y] == 1:
+            if perlin.perlin_settings.map_data[x, y] == 1 or map.data[x, y] == 1:
                 pygame.draw.rect(
                     screen,
                     settings.WALL_COLOR,
@@ -326,7 +326,7 @@ while settings.running:
         1: "Food",
         2: "Workers",
         3: "Soldiers",
-        4: "Enemy",
+        4: "Enemy (Disabled)",
         5: "Magnet",
         6: "Wall",
         7: "Floor",

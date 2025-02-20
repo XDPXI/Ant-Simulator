@@ -51,7 +51,7 @@ class EnemySoldier:
         for i in range(1, steps):
             x = self.x + dx * i / steps
             y = self.y + dy * i / steps
-            if collision.check_collision(x, y):
+            if collision.check_collision(x, y, True):
                 return True
         return False
 
@@ -74,7 +74,7 @@ class EnemySoldier:
         new_x = self.x + dx
         new_y = self.y + dy
 
-        if not collision.check_collision(new_x, new_y):
+        if not collision.check_collision(new_x, new_y, True):
             self.x = new_x
             self.y = new_y
             self.angle = math.atan2(dy, dx)
@@ -87,7 +87,7 @@ class EnemySoldier:
             new_x = self.x + math.cos(self.angle) * self.speed
             new_y = self.y + math.sin(self.angle) * self.speed
 
-            if not collision.check_collision(new_x, new_y):
+            if not collision.check_collision(new_x, new_y, True):
                 self.x = new_x
                 self.y = new_y
                 break

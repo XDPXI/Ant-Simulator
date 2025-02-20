@@ -4,7 +4,7 @@ import numpy as np
 from perlin_noise import PerlinNoise
 
 import settings
-from core import logging
+from core import logging, map
 
 
 class PerlinNoiseSettings:
@@ -57,3 +57,7 @@ def regenerate(seed_button_value, threshold_slider):
                     settings.MONITOR_WIDTH // 2,
                     settings.MONITOR_HEIGHT // 2,
                 )
+
+        for x in range(settings.MAP_WIDTH):
+            for y in range(settings.MAP_HEIGHT):
+                map.data[x, y] = 1

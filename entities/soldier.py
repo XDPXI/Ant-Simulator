@@ -4,7 +4,7 @@ import random
 import pygame
 
 import settings
-from core import logging, collision
+from core import logging, collision, map
 
 
 class Soldier:
@@ -24,6 +24,14 @@ class Soldier:
     def move(self):
         self.random_walk()
         self.stay_within_range()
+
+        try:
+            if self.y >= 0:
+                map.data[round(self.x), round(self.y)] = 0
+        except IndexError:
+            logging.error(
+                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y})"
+            )
 
     def stay_within_range(self):
         for queen in settings.queen:
