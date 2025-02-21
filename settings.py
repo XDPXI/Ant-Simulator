@@ -10,13 +10,14 @@ view_log_level = "INFO"
 
 # Colors
 BG_COLOR = (118, 97, 77)
-WALL_COLOR = (77, 62, 49)
+WALL_COLOR = (98, 77, 57)
 ANT_COLOR = "#bf360c"
 ENEMY_COLOR = "#000000"
 SOLDIER_COLOR = "#8c2708"
 QUEEN_COLOR = "#722007"
 NEST_COLOR = "#9c8065"
 FOOD_COLOR = "#D2042D"
+STONE_COLOR = (88, 67, 47)
 
 # Screen
 MONITOR_WIDTH = screeninfo.get_monitors()[0].width

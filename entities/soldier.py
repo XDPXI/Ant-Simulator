@@ -30,7 +30,7 @@ class Soldier:
                 map.data[round(self.x), round(self.y)] = 0
         except IndexError:
             logging.error(
-                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y})"
+                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y}) | Entity: Soldier"
             )
 
     def stay_within_range(self):

@@ -30,7 +30,7 @@ class Queen:
                 map.data[round(self.x), round(self.y)] = 0
         except IndexError:
             logging.error(
-                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y})"
+                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y}) | Entity: Queen"
             )
 
     def stay_within_range(self):

@@ -233,10 +233,21 @@ while settings.running:
 
     for x in range(settings.MAP_WIDTH):
         for y in range(settings.MAP_HEIGHT):
-            if perlin.perlin_settings.map_data[x, y] == 1 or map.data[x, y] == 1:
+            if map.data[x, y] == 1:
                 pygame.draw.rect(
                     screen,
                     settings.WALL_COLOR,
+                    (
+                        (x * 10) - settings.camera_x,
+                        (y * 10) - settings.camera_y,
+                        10,
+                        10,
+                    ),
+                )
+            if perlin.perlin_settings.map_data[x, y] == 1:
+                pygame.draw.rect(
+                    screen,
+                    settings.STONE_COLOR,
                     (
                         (x * 10) - settings.camera_x,
                         (y * 10) - settings.camera_y,

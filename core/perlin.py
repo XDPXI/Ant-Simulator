@@ -61,3 +61,7 @@ def regenerate(seed_button_value, threshold_slider):
         for x in range(settings.MAP_WIDTH):
             for y in range(settings.MAP_HEIGHT):
                 map.data[x, y] = 1
+
+        for x in range(settings.MAP_WIDTH):
+            if x < settings.MAP_WIDTH // 2 - 4 or x > settings.MAP_WIDTH // 2 + 4:
+                perlin_settings.map_data[x, 0] = 1
