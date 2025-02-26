@@ -1,4 +1,5 @@
 import settings
+import random
 from core import perlin, logging
 from entities import worker
 
@@ -21,6 +22,7 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
                     settings.nest_location,
                     settings.pheromone_map,
                     speed_slider.value,
+                    random.choices([0, 1, 2], weights=[2, 2, 1])[0]
                 )
             )
     except IndexError:

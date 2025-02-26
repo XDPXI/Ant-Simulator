@@ -8,9 +8,10 @@ from core import logging, collision, map
 
 
 class Ant:
-    def __init__(self, x, y, nest_location, pheromone_map, speed):
+    def __init__(self, x, y, nest_location, pheromone_map, speed, assignment):
         self.x = x
         self.y = y
+        self.assignment = assignment
         self.nest_location = nest_location
         self.has_food = False
         self.pheromone_map = pheromone_map
@@ -42,7 +43,7 @@ class Ant:
         for i in range(1, steps):
             x = self.x + dx * i / steps
             y = self.y + dy * i / steps
-            if collision.check_collision(x, y):
+            if collision.check_collision(x, y, None, self.assignment):
                 return True
         return False
 
@@ -53,12 +54,26 @@ class Ant:
         else:
             self.random_walk()
 
+        self.x = max(0, min(self.x, settings.MAP_WIDTH - 1))
+        self.y = max(0, min(self.y, settings.MAP_HEIGHT - 1))
+        x, y = round(self.x), round(self.y)
         try:
-            if self.y >= 0:
-                map.data[round(self.x), round(self.y)] = 0
+            if 0 <= x < settings.MAP_WIDTH and 0 <= y < settings.MAP_HEIGHT:
+                if self.assignment == 1:
+                    map.data[x, y] = 0
+                elif self.assignment == 2:
+                    for dx in range(-1, 2):
+                        for dy in range(-1, 2):
+                            nx, ny = x + dx, y + dy
+                            if 0 <= nx < settings.MAP_WIDTH and 0 <= ny < settings.MAP_HEIGHT:
+                                map.data[nx, ny] = 0
+            else:
+                logging.warn(
+                    f"Ant position out of bounds: ({x}, {y}) | Camera: ({settings.camera_x}, {settings.camera_y}) | Entity: Worker | Assignment: {self.assignment}"
+                )
         except IndexError:
             logging.error(
-                f"Invalid grid position: ({self.x}, {self.y}) | Camera: ({settings.camera_x}, {settings.camera_y}) | Entity: Worker"
+                f"Invalid grid position: ({x}, {y}) | Camera: ({settings.camera_x}, {settings.camera_y}) | Entity: Worker | Assignment: {self.assignment}"
             )
 
     def move_towards(self, target):
@@ -73,7 +88,7 @@ class Ant:
         new_x = self.x + dx
         new_y = self.y + dy
 
-        if not collision.check_collision(new_x, new_y):
+        if not collision.check_collision(new_x, new_y, None, self.assignment):
             self.x = new_x
             self.y = new_y
             self.angle = math.atan2(dy, dx)
@@ -86,7 +101,7 @@ class Ant:
             new_x = self.x + math.cos(self.angle) * self.speed
             new_y = self.y + math.sin(self.angle) * self.speed
 
-            if not collision.check_collision(new_x, new_y):
+            if not collision.check_collision(new_x, new_y, None, self.assignment):
                 self.x = new_x
                 self.y = new_y
                 break

@@ -63,6 +63,7 @@ def start():
             settings.nest_location,
             settings.pheromone_map,
             speed_slider.value,
+            random.choices([0, 1, 2], weights=[2, 2, 1])[0]
         )
         for _ in range(int(settings.ant_slider.value))
     ]
@@ -255,6 +256,10 @@ while settings.running:
                         10,
                     ),
                 )
+
+    for x in range(settings.MAP_WIDTH):
+            if x < settings.MAP_WIDTH // 2 - 4 or x > settings.MAP_WIDTH // 2 + 4:
+                perlin.perlin_settings.map_data[x, 0] = 1
 
     for food in settings.food_locations:
         pygame.draw.rect(
