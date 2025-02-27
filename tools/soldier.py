@@ -1,5 +1,5 @@
 import settings
-from core import perlin, logging
+from core import perlin, logging, map
 from entities import soldier
 
 
@@ -12,7 +12,11 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
     grid_y = (mouse_y + settings.camera_y) // settings.GRID_SIZE
 
     try:
-        if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= -4:
+        if (
+            not perlin.perlin_settings.map_data[grid_x][grid_y]
+            and grid_y >= 1
+            and not map.data[grid_x][grid_y]
+        ):
             settings.soldiers.append(
                 soldier.Soldier(
                     grid_x,

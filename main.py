@@ -18,7 +18,7 @@ from tools import (
     soldier as soldier2,
 )
 
-logging.setup("INFO")
+logging.setup("DEBUG")
 
 pygame.init()
 
@@ -63,7 +63,7 @@ def start():
             settings.nest_location,
             settings.pheromone_map,
             speed_slider.value,
-            random.choices([0, 1, 2], weights=[2, 2, 1])[0]
+            random.choices([0, 1, 2], weights=[4, 2, 1])[0],
         )
         for _ in range(int(settings.ant_slider.value))
     ]
@@ -258,8 +258,8 @@ while settings.running:
                 )
 
     for x in range(settings.MAP_WIDTH):
-            if x < settings.MAP_WIDTH // 2 - 4 or x > settings.MAP_WIDTH // 2 + 4:
-                perlin.perlin_settings.map_data[x, 0] = 1
+        if x < settings.MAP_WIDTH // 2 - 4 or x > settings.MAP_WIDTH // 2 + 4:
+            perlin.perlin_settings.map_data[x, 0] = 1
 
     for food in settings.food_locations:
         pygame.draw.rect(
@@ -342,7 +342,7 @@ while settings.running:
         1: "Food",
         2: "Workers",
         3: "Soldiers",
-        4: "Enemy (Disabled)",
+        4: "Enemy",
         5: "Magnet",
         6: "Wall",
         7: "Floor",

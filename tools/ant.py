@@ -1,6 +1,6 @@
 import settings
 import random
-from core import perlin, logging
+from core import perlin, logging, map
 from entities import worker
 
 
@@ -13,7 +13,11 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
     grid_y = (mouse_y + settings.camera_y) // settings.GRID_SIZE
 
     try:
-        if not perlin.perlin_settings.map_data[grid_x][grid_y] and grid_y >= -4:
+        if (
+            not perlin.perlin_settings.map_data[grid_x][grid_y]
+            and grid_y >= 1
+            and not map.data[grid_x][grid_y]
+        ):
             settings.ant_slider.value += 1
             settings.ants.append(
                 worker.Ant(
@@ -22,7 +26,7 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
                     settings.nest_location,
                     settings.pheromone_map,
                     speed_slider.value,
-                    random.choices([0, 1, 2], weights=[2, 2, 1])[0]
+                    random.choices([0, 1, 2], weights=[4, 2, 1])[0],
                 )
             )
     except IndexError:
