@@ -1,5 +1,3 @@
-import numpy as np
-
 import settings
 from core import logging, perlin, map
 

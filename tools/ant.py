@@ -1,5 +1,6 @@
-import settings
 import random
+
+import settings
 from core import perlin, logging, map
 from entities import worker
 

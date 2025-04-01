@@ -43,7 +43,6 @@ icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
 logging.info("Window and icon initialized.")
 
-
 seed_button_value = perlin.perlin_settings.seed
 
 
@@ -129,7 +128,6 @@ sun_image = pygame.transform.scale(sun_image, (300, 300))
 
 ant_nest = pygame.image.load("assets/nest.png").convert_alpha()
 ant_nest = pygame.transform.scale(ant_nest, (100, 50))
-
 
 logging.info("Game loop started.")
 while settings.running:
