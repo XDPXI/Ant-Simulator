@@ -18,13 +18,13 @@ COLORS = {
 
 class Slider:
     def __init__(
-        self,
-        x: int,
-        y: int,
-        width: int,
-        min_value: float,
-        max_value: float,
-        initial_value: float,
+            self,
+            x: int,
+            y: int,
+            width: int,
+            min_value: float,
+            max_value: float,
+            initial_value: float,
     ):
         self.rect = pygame.Rect(x, y, width, SLIDER_HEIGHT)
         self.min_value = min_value
@@ -42,10 +42,10 @@ class Slider:
 
     def _calculate_handle_rect(self) -> pygame.Rect:
         handle_x = (
-            self.rect.x
-            + (self.value - self.min_value)
-            / (self.max_value - self.min_value)
-            * self.rect.width
+                self.rect.x
+                + (self.value - self.min_value)
+                / (self.max_value - self.min_value)
+                * self.rect.width
         )
         return pygame.Rect(
             handle_x - HANDLE_WIDTH // 2, self.rect.y, HANDLE_WIDTH, SLIDER_HEIGHT
@@ -62,7 +62,7 @@ class Slider:
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and self.handle_rect.collidepoint(
-            event.pos
+                event.pos
         ):
             self.dragging = True
             settings.drawing_food = False
@@ -81,7 +81,7 @@ class Slider:
     def _update_value(self, x: int):
         relative_x = max(0, min(x - self.rect.x, self.rect.width))
         self.value = self.min_value + (relative_x / self.rect.width) * (
-            self.max_value - self.min_value
+                self.max_value - self.min_value
         )
         self.handle_rect = self._calculate_handle_rect()
 

@@ -16,14 +16,14 @@ COLORS = {
 
 class ProgressBar:
     def __init__(
-        self,
-        x: int,
-        y: int,
-        width: int,
-        min_value: float,
-        max_value: float,
-        initial_value: float,
-        label: str = "",
+            self,
+            x: int,
+            y: int,
+            width: int,
+            min_value: float,
+            max_value: float,
+            initial_value: float,
+            label: str = "",
     ):
         self.rect = pygame.Rect(x, y, width, PROGRESSBAR_HEIGHT)
         self.min_value = min_value
