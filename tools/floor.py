@@ -1,5 +1,5 @@
 import settings
-from core import perlin, logging
+from core import logging, perlin
 
 
 def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):

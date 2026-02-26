@@ -1,7 +1,7 @@
 import random
 
 import settings
-from core import perlin, logging, map
+from core import logging, map, perlin
 from entities import worker
 
 
@@ -15,9 +15,9 @@ def draw(event_pos, threshold_slider, seed_button, speed_slider, start_button):
 
     try:
         if (
-                not perlin.perlin_settings.map_data[grid_x][grid_y]
-                and grid_y >= 1
-                and not map.data[grid_x][grid_y]
+            not perlin.perlin_settings.map_data[grid_x][grid_y]
+            and grid_y >= 1
+            and not map.data[grid_x][grid_y]
         ):
             settings.ant_slider.value += 1
             settings.ants.append(

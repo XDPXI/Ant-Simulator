@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from colorama import init, Fore, Style
+from colorama import Fore, Style, init
 
 import settings
 

@@ -4,7 +4,7 @@ import random
 import pygame
 
 import settings
-from core import logging, collision
+from core import collision, logging
 
 
 class EnemySoldier:
@@ -33,7 +33,7 @@ class EnemySoldier:
                     if distance <= self.vision_range:
                         angle = math.atan2(dy, dx)
                         angle_diff = (angle - self.angle + math.pi) % (
-                                2 * math.pi
+                            2 * math.pi
                         ) - math.pi
                         if abs(angle_diff) <= self.vision_angle / 2:
                             if not self.check_line_of_sight(entity):

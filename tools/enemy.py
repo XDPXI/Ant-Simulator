@@ -1,5 +1,5 @@
 import settings
-from core import perlin, logging, map
+from core import logging, map, perlin
 from entities import enemy_soldier
 
 

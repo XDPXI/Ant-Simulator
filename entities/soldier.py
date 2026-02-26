@@ -4,7 +4,7 @@ import random
 import pygame
 
 import settings
-from core import logging, collision, map
+from core import collision, logging, map
 
 
 class Soldier:

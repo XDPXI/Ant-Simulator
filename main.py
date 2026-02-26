@@ -6,15 +6,21 @@ import sys
 import pygame
 
 import settings
-from core import perlin, logging, map
-from entities import worker, queen, soldier
+from core import logging, map, perlin
+from entities import queen, soldier, worker
 from tools import (
     ant as ant2,
-    food as food2,
+)
+from tools import (
+    enemy,
+    floor,
     magnet,
     wall,
-    floor,
-    enemy,
+)
+from tools import (
+    food as food2,
+)
+from tools import (
     soldier as soldier2,
 )
 
@@ -37,7 +43,7 @@ if platform.system() == "Windows":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     os.environ["NVD_BACKEND"] = "dx11"
 
-from gui import slider, button, progress_bar, text
+from gui import button, progress_bar, slider, text
 
 icon = pygame.image.load("assets/icon.png").convert_alpha()
 pygame.display.set_icon(icon)
